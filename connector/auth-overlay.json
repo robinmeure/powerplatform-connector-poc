@@ -1,0 +1,50 @@
+{
+  "properties": {
+    "displayName": "CZ Connector Proof",
+    "connectionParameters": {
+      "token": {
+        "type": "oauthSetting",
+        "oAuthSettings": {
+          "identityProvider": "aad",
+          "clientId": "__CONNECTOR_ID__",
+          "scopes": [],
+          "redirectMode": "Global",
+          "redirectUrl": "https://global.consent.azure-apim.net/redirect",
+          "properties": {
+            "IsFirstParty": "False",
+            "AzureActiveDirectoryResourceId": "__FRONTEND_RESOURCE__"
+          },
+          "customParameters": {
+            "loginUri": { "value": "https://login.microsoftonline.com" },
+            "tenantId": { "value": "__TENANT_ID__" },
+            "resourceUri": { "value": "__FRONTEND_RESOURCE__" }
+          }
+        }
+      },
+      "api_key": {
+        "type": "securestring",
+        "uiDefinition": {
+          "displayName": "APIM subscription key",
+          "description": "Product subscription key supplied by the central platform team.",
+          "tooltip": "The value is stored securely in the local Connection.",
+          "constraints": { "required": "true", "clearText": false, "tabIndex": 2 }
+        }
+      }
+    },
+    "iconBrandColor": "#005A9E",
+    "capabilities": [],
+    "policyTemplateInstances": [
+      {
+        "templateId": "setheader",
+        "title": "Send the Product subscription key",
+        "parameters": {
+          "x-ms-apimTemplateParameter.name": "Ocp-Apim-Subscription-Key",
+          "x-ms-apimTemplateParameter.value": "@connectionParameters('api_key', '')",
+          "x-ms-apimTemplateParameter.existsAction": "override",
+          "x-ms-apimTemplate-policySection": "Request"
+        }
+      }
+    ],
+    "publisher": "CZ Connector PoC"
+  }
+}

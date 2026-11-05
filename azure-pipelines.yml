@@ -1,0 +1,139 @@
+trigger: none
+
+parameters:
+- name: deployAzure
+  type: boolean
+  default: false
+- name: deploySolutions
+  type: boolean
+  default: false
+- name: azureServiceConnection
+  type: string
+  default: REPLACE_WITH_AZURE_WIF_SERVICE_CONNECTION
+- name: sourcePowerPlatformConnection
+  type: string
+  default: REPLACE_WITH_SOURCE_POWER_PLATFORM_WIF_CONNECTION
+- name: targetPowerPlatformConnection
+  type: string
+  default: REPLACE_WITH_TARGET_POWER_PLATFORM_WIF_CONNECTION
+- name: subscriptionId
+  type: string
+  default: REPLACE_WITH_APPROVED_SUBSCRIPTION_GUID
+- name: tenantId
+  type: string
+  default: REPLACE_WITH_APPROVED_TENANT_GUID
+- name: location
+  type: string
+  default: swedencentral
+- name: resourceGroup
+  type: string
+  default: rg-cz-connector-poc-demo
+- name: publisherName
+  type: string
+  default: CZ Connector PoC
+- name: publisherEmail
+  type: string
+  default: REPLACE_WITH_PUBLISHER_EMAIL
+- name: consumerSettingsSecureFile
+  type: string
+  default: REPLACE_WITH_CONSUMER_DEPLOYMENT_SETTINGS_FILE
+
+pool:
+  vmImage: windows-latest
+
+stages:
+- stage: Build
+  jobs:
+  - job: Validate
+    steps:
+    - task: UseDotNet@2
+      inputs:
+        packageType: sdk
+        version: 10.x
+    - pwsh: dotnet test .\tests\Backend.Tests\Backend.Tests.csproj --verbosity quiet
+      displayName: Backend authorization tests
+
+- stage: Azure
+  dependsOn: Build
+  condition: and(succeeded(), ${{ eq(parameters.deployAzure, true) }})
+  jobs:
+  - deployment: DeployAzure
+    environment: cz-demo-azure
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: UseDotNet@2
+            inputs:
+              packageType: sdk
+              version: 10.x
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: ${{ parameters.azureServiceConnection }}
+              scriptType: pscore
+              scriptLocation: scriptPath
+              scriptPath: scripts\Deploy-Azure.ps1
+              arguments: >-
+                -SubscriptionId ${{ parameters.subscriptionId }}
+                -TenantId ${{ parameters.tenantId }}
+                -Location ${{ parameters.location }}
+                -ResourceGroup ${{ parameters.resourceGroup }}
+                -PublisherName "${{ parameters.publisherName }}"
+                -PublisherEmail "${{ parameters.publisherEmail }}"
+
+- stage: Solutions
+  # Ordered promotion template only. Existing target Active layers require the separately
+  # approved inspection/restoration procedure in docs/deployment.md and a real flow rerun.
+  dependsOn: Build
+  condition: and(succeeded(), ${{ eq(parameters.deploySolutions, true) }})
+  jobs:
+  - deployment: PromoteSolutions
+    environment: cz-demo-power-platform
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+          - task: PowerPlatformToolInstaller@2
+          - task: PowerPlatformPublishCustomizations@2
+            inputs:
+              authenticationType: PowerPlatformSPN
+              PowerPlatformSPN: ${{ parameters.sourcePowerPlatformConnection }}
+          - task: PowerPlatformExportSolution@2
+            inputs:
+              authenticationType: PowerPlatformSPN
+              PowerPlatformSPN: ${{ parameters.sourcePowerPlatformConnection }}
+              SolutionName: CZPoCConnector
+              SolutionOutputFile: $(Pipeline.Workspace)\CZPoCConnector_managed.zip
+              Managed: true
+          - task: PowerPlatformExportSolution@2
+            inputs:
+              authenticationType: PowerPlatformSPN
+              PowerPlatformSPN: ${{ parameters.sourcePowerPlatformConnection }}
+              SolutionName: CZPoCConsumer
+              SolutionOutputFile: $(Pipeline.Workspace)\CZPoCConsumer_managed.zip
+              Managed: true
+          - pwsh: .\scripts\Test-ManagedPackages.ps1 -SolutionDirectory "$(Pipeline.Workspace)"
+            displayName: Verify separate connector ownership
+          - task: PowerPlatformImportSolution@2
+            inputs:
+              authenticationType: PowerPlatformSPN
+              PowerPlatformSPN: ${{ parameters.targetPowerPlatformConnection }}
+              SolutionInputFile: $(Pipeline.Workspace)\CZPoCConnector_managed.zip
+              AsyncOperation: true
+              MaxAsyncWaitTime: 60
+          # Target federation and delegated Connection must exist before binding the consumer.
+          - task: DownloadSecureFile@1
+            name: consumerSettings
+            inputs:
+              secureFile: ${{ parameters.consumerSettingsSecureFile }}
+          - task: PowerPlatformImportSolution@2
+            inputs:
+              authenticationType: PowerPlatformSPN
+              PowerPlatformSPN: ${{ parameters.targetPowerPlatformConnection }}
+              SolutionInputFile: $(Pipeline.Workspace)\CZPoCConsumer_managed.zip
+              UseDeploymentSettingsFile: true
+              DeploymentSettingsFile: $(consumerSettings.secureFilePath)
+              AsyncOperation: true
+              MaxAsyncWaitTime: 60

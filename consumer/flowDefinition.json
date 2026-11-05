@@ -1,0 +1,42 @@
+{
+  "properties": {
+    "connectionReferences": {
+      "__API_NAME__": {
+        "runtimeSource": "embedded",
+        "connection": { "connectionReferenceLogicalName": "cz_CZProofConnection" },
+        "api": { "name": "__API_NAME__" }
+      }
+    },
+    "definition": {
+      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+      "contentVersion": "1.0.0.0",
+      "parameters": {
+        "$connections": { "defaultValue": {}, "type": "Object" },
+        "$authentication": { "defaultValue": {}, "type": "SecureObject" }
+      },
+      "triggers": {
+        "manual": {
+          "type": "Request",
+          "kind": "Button",
+          "inputs": { "schema": { "type": "object", "properties": {}, "required": [] } }
+        }
+      },
+      "actions": {
+        "Get_identity_proof": {
+          "runAfter": {},
+          "type": "OpenApiConnection",
+          "inputs": {
+            "host": {
+              "apiId": "/providers/Microsoft.PowerApps/apis/__API_NAME__",
+              "connectionName": "__API_NAME__",
+              "operationId": "GetProof"
+            },
+            "parameters": {},
+            "authentication": "@parameters('$authentication')"
+          }
+        }
+      }
+    }
+  },
+  "schemaVersion": "1.0.0.0"
+}

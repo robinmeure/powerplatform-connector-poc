@@ -1,0 +1,30 @@
+<policies>
+  <inbound>
+    <base />
+    <validate-azure-ad-token tenant-id="__TENANT_ID__" header-name="Authorization"
+        failed-validation-httpcode="401" failed-validation-error-message="Delegated caller authorization failed">
+      <client-application-ids>
+        <application-id>__CONNECTOR_ID__</application-id>
+      </client-application-ids>
+      <audiences>
+        <audience>__FRONTEND_ID__</audience>
+      </audiences>
+      <required-claims>
+        <claim name="scp" match="all" separator=" ">
+          <value>Demo.Read</value>
+        </claim>
+      </required-claims>
+    </validate-azure-ad-token>
+    <authentication-managed-identity resource="__BACKEND_RESOURCE__" ignore-error="false" />
+    <set-header name="Ocp-Apim-Subscription-Key" exists-action="delete" />
+  </inbound>
+  <backend>
+    <base />
+  </backend>
+  <outbound>
+    <base />
+  </outbound>
+  <on-error>
+    <base />
+  </on-error>
+</policies>

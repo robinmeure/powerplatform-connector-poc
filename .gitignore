@@ -1,0 +1,9 @@
+.env
+*.local.json
+local.settings.json
+deploymentSettings.*.local.json
+out/
+bin/
+obj/
+*.zip
+.azure/

@@ -8,6 +8,47 @@ See [architecture](docs/architecture.md), [deployment](docs/deployment.md), and 
 
 The update was not a blind managed import: guards caught PAC dropping the subscription-header policy, duplicate connector packaging in the consumer, and an Active layer masking the update. The verified procedure preserves persisted properties and restores recorded target-specific federation metadata after the approved layer removal. See the deployment guide for these important ALM limitations. Azure DevOps remains an unexecuted template, not an automated-promotion proof.
 
+Read the [detailed implementation summary](docs/implementation-summary.md) for what was built, why each step was necessary, the original four CZ requirements, real run evidence, and the limitations discovered.
+
+## Retained demo inventory
+
+The user chose to **keep the deployed demo**. These non-secret identifiers describe the verified deployment on 5 November 2026; they are not credentials or authorization to change resources.
+
+| Item | Retained value |
+|------|----------------|
+| Azure subscription | `ME-MngEnvMCAP935538-rmeure-1` / `17254a3c-2e67-4fec-9e2c-cfe17cfb579d` |
+| Entra tenant | `63645c73-a00c-4659-b911-eb6c4c2d4a8f` |
+| Resource group / Azure region | `rg-cz-connector-poc-demo` / Sweden Central (`swedencentral`) |
+| API Management | `czconnector-apim-hvngf2rwwvf7a`, Developer; [gateway](https://czconnector-apim-hvngf2rwwvf7a.azure-api.net), API `cz-proof`, path `/cz` |
+| APIM Product / subscription | `cz-developers` / `cz-demo-connection`; key values are deliberately not included |
+| Backend / App Service plan | `czconnector-api-hvngf2rwwvf7a` / `czconnector-plan-hvngf2rwwvf7a`, Linux B1; [.NET backend health](https://czconnector-api-hvngf2rwwvf7a.azurewebsites.net/health) |
+| Authoring environment | **CZ Connector PoC Build**, Developer, `5a181d17-9728-ebe9-ab82-31716241a959`; Switzerland North; [Dataverse](https://orgf976f77f.crm17.dynamics.com/), [maker solutions](https://make.powerapps.com/environments/5a181d17-9728-ebe9-ab82-31716241a959/solutions/) |
+| Managed-solution target | **CZ Connector PoC**, Developer, `9428be14-6fc4-e1a0-9f36-28db26e7b952`; Switzerland West; [Dataverse](https://orgc9d38663.crm17.dynamics.com/), [maker solutions](https://make.powerapps.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/) |
+| Target connector solution | [CZPoCConnector](https://make.powerapps.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/09a336a4-a4bf-4c6e-acb9-68c1d93972b7), managed `1.0.1.0`; effective OpenAPI definition `1.0.1` |
+| Target consumer solution | [CZPoCConsumer](https://make.powerautomate.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/1a2e4f0c-4d7e-4275-bc6d-ec636e92ebfd), managed `1.0.1.0` |
+| Existing managed flow | [CZ Identity Boundary Proof](https://make.powerautomate.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/~preferred/flows/6c551e3f-21d9-f111-84e8-70a8a5079ecf/details), On; workflow `6c551e3f-21d9-f111-84e8-70a8a5079ecf` |
+| Existing Connection / Reference | `a70df4ce-b90d-43c4-9f07-5119-03bc0036` / `616ee0b0-092b-4313-9a4a-443ba727ec62`, logical reference `cz_CZProofConnection` |
+
+Both Power Platform environments use Dataverse and the existing Developer entitlement. Switzerland placement within **European Union & EFTA** was explicitly approved; it is not exact-Europe placement. "Managed target" means managed solution imports, not a licensed Managed Environment.
+
+## Open and run the existing demo
+
+1. Sign in to the approved tenant with an account that has access to the retained target, then open [CZ Identity Boundary Proof](https://make.powerautomate.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/~preferred/flows/6c551e3f-21d9-f111-84e8-70a8a5079ecf/details). Confirm the environment is **CZ Connector PoC**, not Build or an unrelated environment.
+2. Select **Run > Run flow**. Use the existing Connection; there is no need to recreate or reconnect the verified entry merely to demonstrate the update.
+3. Open the new run and expand **Get identity proof**. Expect HTTP `200`, `callerIsApim=true`, `callerClientIsApim=true`, role `Demo.Invoke`, `delegatedScopePresent=false`, and `userContextPresent=false`. Backend version remains `1.0.0`; connector definition version is independently `1.0.1`.
+
+The saved [baseline run](https://make.powerautomate.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/~preferred/flows/6c551e3f-21d9-f111-84e8-70a8a5079ecf/runs/08584077183106224027230767590CU28) and [post-update run](https://make.powerautomate.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/~preferred/flows/6c551e3f-21d9-f111-84e8-70a8a5079ecf/runs/08584077153898941665765164881CU11) both succeeded. Run-history retention is finite; the summary preserves the essential non-secret observations.
+
+If a later Connection expires or reports an error, inspect the cause before repair. Delegated sign-in may require its owner to interact again. Do not copy subscription keys or tokens into chat, Git, screenshots or deployment settings. Do not use the initial auth overlay to overwrite the federated connector.
+
+## Continuing costs and cleanup
+
+The approved planning estimate for **APIM Developer plus Linux App Service B1** was approximately **USD 0.084/hour**, or **USD 61 per 730 hours**, excluding taxes, traffic and Power Platform licensing. This is the disclosed demo estimate, not a fresh price quote or spending cap; actual billing and entitlement must be checked in the tenant. Keeping resources incurs ongoing charges even when the flow is idle.
+
+All Azure/Entra resources, both Power Platform environments, Connections and flows are intentionally retained. **Cleanup requires separate explicit approval**, exact resource identification and a check for unexpected user content. Nothing in these instructions authorizes deletion or reconfiguration.
+
+## Repository
+
 | Folder | Purpose |
 |--------|---------|
 | `src/Backend` | .NET API with signed-token validation and exact APIM identity/application-role authorization |
@@ -20,4 +61,4 @@ The update was not a blind managed import: guards caught PAC dropping the subscr
 dotnet test .\tests\Backend.Tests\Backend.Tests.csproj
 ```
 
-> Do not commit secrets. Tenant-specific values belong in local or pipeline configuration.
+> Do not commit secrets. Runtime configuration and raw local evidence remain ignored; the inventory and summary intentionally contain only curated non-secret identifiers and results.

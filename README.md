@@ -10,6 +10,8 @@ The update was not a blind managed import: guards caught PAC dropping the subscr
 
 Read the [detailed implementation summary](docs/implementation-summary.md) for what was built, why each step was necessary, the original four Contoso requirements, real run evidence, and the limitations discovered.
 
+For a Dutch decision guide covering when to use delegated authentication or app-only alternatives, see [Delegated of app-only](docs/authenticatie-keuze.md).
+
 **Naming note:** Contoso names throughout this repository are illustrative replacements for the original demo names, including resource URLs and runtime identifiers in historical evidence. This source-only rename does not rename deployed resources or migrate existing solutions, Connections, federation metadata, or ignored local artifacts. Before using these scripts with an existing deployment, reconcile its actual names, ownership tags, identifiers and local configuration; the renamed URLs are not verified live endpoints.
 
 ## Retained demo inventory

@@ -1,6 +1,6 @@
 {
   "properties": {
-    "displayName": "CZ Connector Proof",
+    "displayName": "Contoso Connector Proof",
     "connectionParameters": {
       "token": {
         "type": "oauthSetting",
@@ -45,6 +45,6 @@
         }
       }
     ],
-    "publisher": "CZ Connector PoC"
+    "publisher": "Contoso Connector PoC"
   }
 }

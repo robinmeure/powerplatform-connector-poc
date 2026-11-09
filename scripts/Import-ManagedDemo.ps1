@@ -13,9 +13,9 @@ param(
 . "$PSScriptRoot\Dataverse.ps1"
 & "$PSScriptRoot\Test-ManagedPackages.ps1" -SolutionDirectory $SolutionDirectory
 $session = New-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
-    -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'CZ Connector PoC' `
+    -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'Contoso Connector PoC' `
     -ExpectedLocation $ExpectedLocation
-$name = "CZPoC$Stage"
+$name = "ContosoPoC$Stage"
 $path = Join-Path $SolutionDirectory "${name}_managed.zip"
 $zip = [IO.Compression.ZipFile]::OpenRead($path)
 try {
@@ -33,12 +33,12 @@ $arguments = @('solution', 'import', '--environment', $EnvironmentUrl.AbsoluteUr
 if ($StageAndUpgrade) { $arguments += '--stage-and-upgrade' }
 if ($Stage -eq 'Consumer') {
     if ([string]::IsNullOrWhiteSpace($ConnectionId)) { throw 'Consumer import requires an existing target delegated Connection ID.' }
-    $connectors = Invoke-Dataverse $session "connectors?`$filter=displayname eq 'CZ Connector Proof'"
+    $connectors = Invoke-Dataverse $session "connectors?`$filter=displayname eq 'Contoso Connector Proof'"
     if ($connectors.value.Count -ne 1) { throw 'Import and configure the target connector first.' }
     $settings = @{
         EnvironmentVariables = @()
         ConnectionReferences = @(@{
-            LogicalName = 'cz_CZProofConnection'; ConnectionId = $ConnectionId
+            LogicalName = 'contoso_ContosoProofConnection'; ConnectionId = $ConnectionId
             ConnectorId = "/providers/Microsoft.PowerApps/apis/$($connectors.value[0].connectorinternalid)"
         })
     }

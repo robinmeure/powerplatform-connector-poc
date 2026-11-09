@@ -12,10 +12,10 @@ param(
 . "$PSScriptRoot\Dataverse.ps1"
 . "$PSScriptRoot\ConnectorSecurity.ps1"
 $session = New-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
-    -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'CZ Connector PoC Build' `
+    -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'Contoso Connector PoC Build' `
     -ExpectedLocation $ExpectedLocation
 $before = Invoke-Dataverse $session "connectors($ConnectorId)"
-if ($before.displayname -ne 'CZ Connector Proof' -or $before.ismanaged) {
+if ($before.displayname -ne 'Contoso Connector Proof' -or $before.ismanaged) {
     throw 'Definition updates are allowed only on the unmanaged demo authoring connector.'
 }
 $oldDefinition = $before.openapidefinition | ConvertFrom-Json -Depth 100
@@ -43,7 +43,7 @@ Invoke-Pac @('connector', 'update', '--environment', $EnvironmentUrl.AbsoluteUri
     '--api-properties-file', $propertiesPath)
 $after = Invoke-Dataverse $session "connectors($ConnectorId)"
 Assert-ConnectorSecurityUnchanged -Before $before -After $after
-$solutions = Invoke-Dataverse $session "solutions?`$filter=uniquename eq 'CZPoCConnector'"
+$solutions = Invoke-Dataverse $session "solutions?`$filter=uniquename eq 'ContosoPoCConnector'"
 if ($solutions.value.Count -ne 1) { throw 'Expected exactly one connector authoring solution.' }
 Invoke-Dataverse $session "solutions($($solutions.value[0].solutionid))" PATCH @{ version = $SolutionVersion } | Out-Null
 $fingerprint = [Convert]::ToHexString([Security.Cryptography.SHA256]::HashData(

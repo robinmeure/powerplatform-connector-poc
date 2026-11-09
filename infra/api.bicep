@@ -10,10 +10,10 @@ param backendClientId string
 resource apim 'Microsoft.ApiManagement/service@2024-05-01' existing = { name: apimName }
 resource api 'Microsoft.ApiManagement/service/apis@2024-05-01' = {
   parent: apim
-  name: 'cz-proof'
+  name: 'contoso-proof'
   properties: {
-    displayName: 'CZ Connector Proof'
-    path: 'cz'
+    displayName: 'Contoso Connector Proof'
+    path: 'contoso'
     protocols: [ 'https' ]
     subscriptionRequired: true
     serviceUrl: backendUrl
@@ -34,9 +34,9 @@ resource apiPolicy 'Microsoft.ApiManagement/service/apis/policies@2024-05-01' = 
 
 resource product 'Microsoft.ApiManagement/service/products@2024-05-01' = {
   parent: apim
-  name: 'cz-developers'
+  name: 'contoso-developers'
   properties: {
-    displayName: 'CZ Developers'
+    displayName: 'Contoso Developers'
     description: 'Subscription key and delegated Entra authorization are both required.'
     subscriptionRequired: true
     approvalRequired: true
@@ -57,9 +57,9 @@ resource developerGroup 'Microsoft.ApiManagement/service/products/groups@2024-05
 
 resource subscription 'Microsoft.ApiManagement/service/subscriptions@2024-05-01' = {
   parent: apim
-  name: 'cz-demo-connection'
+  name: 'contoso-demo-connection'
   properties: {
-    displayName: 'CZ demo connection'
+    displayName: 'Contoso demo connection'
     scope: product.id
     state: 'active'
     allowTracing: false

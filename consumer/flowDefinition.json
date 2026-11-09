@@ -3,7 +3,7 @@
     "connectionReferences": {
       "__API_NAME__": {
         "runtimeSource": "embedded",
-        "connection": { "connectionReferenceLogicalName": "cz_CZProofConnection" },
+        "connection": { "connectionReferenceLogicalName": "contoso_ContosoProofConnection" },
         "api": { "name": "__API_NAME__" }
       }
     },

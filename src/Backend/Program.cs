@@ -39,7 +39,7 @@ app.UseAuthorization();
 app.MapGet("/health", () => Results.Ok(new { status = "ready" }));
 app.MapGet("/proof", (ClaimsPrincipal user) => Results.Ok(new
 {
-    message = "CZ API reached through the authorized APIM application identity",
+    message = "Contoso API reached through the authorized APIM application identity",
     version = app.Configuration["Demo:Version"] ?? "1.0.0",
     authentication = new
     {

@@ -1,4 +1,6 @@
-# CZ connector PoC: implementation, decisions and verified results
+# Contoso connector PoC: implementation, decisions and verified results
+
+Names, resource URLs and runtime identifiers in this historical report use illustrative Contoso replacements; deployed resources were not renamed. See the [repository naming note](../README.md) before using this evidence with a live deployment.
 
 ## Outcome and scope
 
@@ -8,11 +10,11 @@ The demonstrated security boundary is **delegated user OAuth plus an APIM Produc
 
 The user chose to retain the deployment. The [README inventory](../README.md#retained-demo-inventory) contains the actual resource names, approved subscription/tenant, regions, environment IDs/URLs and solution links. This report preserves selected non-secret evidence rather than copying ignored local state, credentials, response headers, tokens or cookies into Git.
 
-## The original four CZ steps
+## The original four Contoso steps
 
-| CZ requirement | What was implemented and observed | Boundary of the result |
+| Contoso requirement | What was implemented and observed | Boundary of the result |
 |----------------|----------------------------------|------------------------|
-| 1. INET exposes APIs through APIM, Product access plus JWT and backend authorization | Published Product `cz-developers`, subscription-required API `cz-proof`, approved demo subscription, delegated JWT validation at APIM, then exact APIM managed-identity authorization at the backend. A real flow reached the backend; six live rejection cases also passed. | The connector-side JWT is delegated, not client credentials. Product and subscription were provisioned for the demo; a human Developer Portal request/approval journey was not exercised. |
+| 1. INET exposes APIs through APIM, Product access plus JWT and backend authorization | Published Product `contoso-developers`, subscription-required API `contoso-proof`, approved demo subscription, delegated JWT validation at APIM, then exact APIM managed-identity authorization at the backend. A real flow reached the backend; six live rejection cases also passed. | The connector-side JWT is delegated, not client credentials. Product and subscription were provisioned for the demo; a human Developer Portal request/approval journey was not exercised. |
 | 2. PPE centrally manages the connector and keeps Power Platform authentication settings during API updates | Separate OpenAPI/auth overlay, persisted-property update helper, federation per environment, policy/security guards and an effective-definition check. Definition `1.0.0` became `1.0.1`. | A bare PAC definition update dropped policy templates. A bare managed import did not safely preserve the target-local federation configuration. Guarded correction was required. |
 | 3. PPE distributes versioned managed solutions with controlled dependencies | Dedicated Build environment; separate connector and consumer solutions imported managed into a distinct target. Consumer upgrade removed accidental duplicate connector ownership. | Managed connector limitations and an Active layer mattered. Catalog submission/installation and forced downstream updates were not demonstrated. |
 | 4. Teams use local Connections and Connection References across environments | User completed initial delegated OAuth and repaired the existing Connection; managed consumer bound the target reference to that same Connection. It survived the verified compatible update and real rerun. | No credential-free unattended initial user Connection provisioning was proven. Canvas/Dynamics integration and a full DTAP rollout were not tested. |
@@ -34,9 +36,9 @@ flowchart LR
 
 | Application | Client/application ID | Purpose and permission |
 |-------------|-----------------------|------------------------|
-| `cz-connector-poc-frontend` | `53e6452e-d324-43dc-88ce-3574065eba43` | Represents the APIM-facing resource; exposes delegated scope `Demo.Read` and requests v2 access tokens. |
-| `cz-connector-poc-connector` | `beee3752-ec52-40a0-a7ab-f7c5d325a28c` | Single-tenant OAuth client with delegated `Demo.Read` permission and tenant-wide admin consent. Source and target have separate federated credentials/redirects. No client secrets were created. |
-| `cz-connector-poc-backend` | `4f6f0bbe-dbc3-48f4-87d2-1b48e185167c` | Represents the protected backend; exposes application-only role `Demo.Invoke`, requests v2 tokens and explicitly configures optional access-token claim `idtyp`. |
+| `contoso-connector-poc-frontend` | `53e6452e-d324-43dc-88ce-3574065eba43` | Represents the APIM-facing resource; exposes delegated scope `Demo.Read` and requests v2 access tokens. |
+| `contoso-connector-poc-connector` | `beee3752-ec52-40a0-a7ab-f7c5d325a28c` | Single-tenant OAuth client with delegated `Demo.Read` permission and tenant-wide admin consent. Source and target have separate federated credentials/redirects. No client secrets were created. |
+| `contoso-connector-poc-backend` | `4f6f0bbe-dbc3-48f4-87d2-1b48e185167c` | Represents the protected backend; exposes application-only role `Demo.Invoke`, requests v2 tokens and explicitly configures optional access-token claim `idtyp`. |
 
 APIM's system-assigned service principal has object ID `0806dff9-cfb4-4ca1-b5b1-03105ae848b7` and client ID `49ee4977-6f1e-4524-9f08-3a38e255f08c`. That principal receives `Demo.Invoke` on the backend resource. The connector client does not receive this backend role as a shortcut around APIM.
 
@@ -90,9 +92,9 @@ The user subsequently explicitly accepted **European Union & EFTA, including pos
 
 The APIM-derived OpenAPI contract and initial Power Platform auth overlay are separate source artifacts. Source connector creation was followed by Managed identity configuration in the Security UI using the tenant GUID, not `common`. The platform-provided federation issuer/subject and redirect were registered on the connector OAuth client.
 
-Import into the target produces a distinct runtime identity. Source runtime API name ends `5febfe6c1bbe786875`; target runtime API name is `shared_new-5fcz-20connector-20proof-5fdbb3081242d45d19`. Target federated credential `cz-poc-target` and its target redirect were registered separately from `cz-poc-build`. No cookies/tokens were transferred between browser sessions.
+Import into the target produces a distinct runtime identity. Source runtime API name ends `5febfe6c1bbe786875`; target runtime API name is `shared_new-5fcontoso-20connector-20proof-5fdbb3081242d45d19`. Target federated credential `contoso-poc-target` and its target redirect were registered separately from `contoso-poc-build`. No cookies/tokens were transferred between browser sessions.
 
-`CZPoCConnector` owns the central connector. `CZPoCConsumer` owns the manually triggered **CZ Identity Boundary Proof** flow and `cz_CZProofConnection`. The reference includes the connector dependency lookup and is bound on target import through deployment settings to an existing environment-local delegated Connection. The connector is imported before consumer activation.
+`ContosoPoCConnector` owns the central connector. `ContosoPoCConsumer` owns the manually triggered **Contoso Identity Boundary Proof** flow and `contoso_ContosoProofConnection`. The reference includes the connector dependency lookup and is bound on target import through deployment settings to an existing environment-local delegated Connection. The connector is imported before consumer activation.
 
 Initial OAuth consent/Connection setup was interactive. The embedded browser blocked an authentication popup, so the user used their ordinary browser. The existing matching Connection initially reported Error/Reconnect, was repaired by its owner, and was independently observed as Connected before binding. No Connection was deleted or recreated. Connected was only a prerequisite; the real flow invocation supplied the positive end-to-end proof.
 
@@ -138,7 +140,7 @@ Both actual runs used workflow `6c551e3f-21d9-f111-84e8-70a8a5079ecf` in target 
 | Managed connector solution | `1.0.0.1` | `1.0.1.0` |
 | Effective definition | `1.0.0` | `1.0.1`, changed summary/description; stable operation contract |
 | Original Connection | `a70df4ce-b90d-43c4-9f07-5119-03bc0036` | Same; no Reconnect/reauthentication since baseline |
-| Connection Reference | `616ee0b0-092b-4313-9a4a-443ba727ec62` | Same, logical name `cz_CZProofConnection` |
+| Connection Reference | `616ee0b0-092b-4313-9a4a-443ba727ec62` | Same, logical name `contoso_ContosoProofConnection` |
 | Backend result | Exact APIM object/client checks true; `Demo.Invoke`; no delegated scope/user context | Same; backend remains version `1.0.0` |
 
 The final consumer solution is managed `1.0.1.0`. Connector Dataverse component ID remains `5efda2d4-20d9-f111-84e8-70a8a5079ecf`.
@@ -156,7 +158,7 @@ Header policy before and normalized final after:
 81588E267021828E2E53435504633F3F67E09B068D419C1E8D32775D86186956
 ```
 
-Target federation and redirect were independently verified unchanged on the Entra application, with zero client secrets. The final target redirect is `https://global.consent.azure-apim.net/redirect/new-5fcz-20connector-20proof-5fdbb3081242d45d19`; the target subject is distinct from Build. The original snapshots, redacted run records and repair history remain ignored under `out\`; this report preserves the essential observations after transient run history expires.
+Target federation and redirect were independently verified unchanged on the Entra application, with zero client secrets. The final target redirect is `https://global.consent.azure-apim.net/redirect/new-5fcontoso-20connector-20proof-5fdbb3081242d45d19`; the target subject is distinct from Build. The original snapshots, redacted run records and repair history remain ignored under `out\`; this report preserves the essential observations after transient run history expires.
 
 ### What was validated, and what was not
 

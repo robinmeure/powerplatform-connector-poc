@@ -27,10 +27,10 @@ parameters:
   default: swedencentral
 - name: resourceGroup
   type: string
-  default: rg-cz-connector-poc-demo
+  default: rg-contoso-connector-poc-demo
 - name: publisherName
   type: string
-  default: CZ Connector PoC
+  default: Contoso Connector PoC
 - name: publisherEmail
   type: string
   default: REPLACE_WITH_PUBLISHER_EMAIL
@@ -58,7 +58,7 @@ stages:
   condition: and(succeeded(), ${{ eq(parameters.deployAzure, true) }})
   jobs:
   - deployment: DeployAzure
-    environment: cz-demo-azure
+    environment: contoso-demo-azure
     strategy:
       runOnce:
         deploy:
@@ -89,7 +89,7 @@ stages:
   condition: and(succeeded(), ${{ eq(parameters.deploySolutions, true) }})
   jobs:
   - deployment: PromoteSolutions
-    environment: cz-demo-power-platform
+    environment: contoso-demo-power-platform
     strategy:
       runOnce:
         deploy:
@@ -104,15 +104,15 @@ stages:
             inputs:
               authenticationType: PowerPlatformSPN
               PowerPlatformSPN: ${{ parameters.sourcePowerPlatformConnection }}
-              SolutionName: CZPoCConnector
-              SolutionOutputFile: $(Pipeline.Workspace)\CZPoCConnector_managed.zip
+              SolutionName: ContosoPoCConnector
+              SolutionOutputFile: $(Pipeline.Workspace)\ContosoPoCConnector_managed.zip
               Managed: true
           - task: PowerPlatformExportSolution@2
             inputs:
               authenticationType: PowerPlatformSPN
               PowerPlatformSPN: ${{ parameters.sourcePowerPlatformConnection }}
-              SolutionName: CZPoCConsumer
-              SolutionOutputFile: $(Pipeline.Workspace)\CZPoCConsumer_managed.zip
+              SolutionName: ContosoPoCConsumer
+              SolutionOutputFile: $(Pipeline.Workspace)\ContosoPoCConsumer_managed.zip
               Managed: true
           - pwsh: .\scripts\Test-ManagedPackages.ps1 -SolutionDirectory "$(Pipeline.Workspace)"
             displayName: Verify separate connector ownership
@@ -120,7 +120,7 @@ stages:
             inputs:
               authenticationType: PowerPlatformSPN
               PowerPlatformSPN: ${{ parameters.targetPowerPlatformConnection }}
-              SolutionInputFile: $(Pipeline.Workspace)\CZPoCConnector_managed.zip
+              SolutionInputFile: $(Pipeline.Workspace)\ContosoPoCConnector_managed.zip
               AsyncOperation: true
               MaxAsyncWaitTime: 60
           # Target federation and delegated Connection must exist before binding the consumer.
@@ -132,7 +132,7 @@ stages:
             inputs:
               authenticationType: PowerPlatformSPN
               PowerPlatformSPN: ${{ parameters.targetPowerPlatformConnection }}
-              SolutionInputFile: $(Pipeline.Workspace)\CZPoCConsumer_managed.zip
+              SolutionInputFile: $(Pipeline.Workspace)\ContosoPoCConsumer_managed.zip
               UseDeploymentSettingsFile: true
               DeploymentSettingsFile: $(consumerSettings.secureFilePath)
               AsyncOperation: true

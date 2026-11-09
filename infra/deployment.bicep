@@ -4,17 +4,17 @@ param location string
 param resourceGroupName string
 param publisherName string
 param publisherEmail string
-param prefix string = 'czconnector'
+param prefix string = 'contosoconnector'
 param tenantId string
 param backendClientId string
 
 resource group 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   name: resourceGroupName
   location: location
-  tags: { purpose: 'cz-connector-poc' }
+  tags: { purpose: 'contoso-connector-poc' }
 }
 module resources './main.bicep' = {
-  name: 'cz-infrastructure'
+  name: 'contoso-infrastructure'
   scope: group
   params: {
     location: location

@@ -18,7 +18,7 @@ if ($RedirectUri.Scheme -ne 'https' -or $RedirectUri.UserInfo -or
     throw 'Use the exact HTTPS consent.azure-apim.net redirect URI shown by the connector.'
 }
 $app = Invoke-Graph -Path "applications/$($identity.connectorObjectId)"
-if ($app.tags -notcontains 'CZConnectorPoC' -or $app.appId -ne $identity.connectorClientId) {
+if ($app.tags -notcontains 'ContosoConnectorPoC' -or $app.appId -ne $identity.connectorClientId) {
     throw 'Connector client registration is not the demo-owned application.'
 }
 $credentials = Invoke-Graph -Path "applications/$($app.id)/federatedIdentityCredentials"

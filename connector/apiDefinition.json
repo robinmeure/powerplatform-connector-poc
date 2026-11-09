@@ -1,12 +1,12 @@
 {
   "swagger": "2.0",
   "info": {
-    "title": "CZ Connector Proof",
+    "title": "Contoso Connector Proof",
     "description": "Delegated OAuth to APIM; APIM application identity to the backend.",
     "version": "1.0.0"
   },
   "host": "configured-by-export.invalid",
-  "basePath": "/cz",
+  "basePath": "/contoso",
   "schemes": ["https"],
   "produces": ["application/json"],
   "paths": {

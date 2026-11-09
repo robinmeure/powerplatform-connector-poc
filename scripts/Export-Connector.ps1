@@ -10,7 +10,7 @@ $identity = Get-Content -LiteralPath $IdentityPath -Raw | ConvertFrom-Json
 $azure = Get-Content -LiteralPath $AzurePath -Raw | ConvertFrom-Json
 Assert-Tenant -TenantId $identity.tenantId -SubscriptionId $identity.subscriptionId
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null
-$url = "https://management.azure.com/subscriptions/$($identity.subscriptionId)/resourceGroups/$($azure.resourceGroup)/providers/Microsoft.ApiManagement/service/$($azure.apimName)/apis/cz-proof?format=swagger-json&export=true&api-version=2024-05-01"
+$url = "https://management.azure.com/subscriptions/$($identity.subscriptionId)/resourceGroups/$($azure.resourceGroup)/providers/Microsoft.ApiManagement/service/$($azure.apimName)/apis/contoso-proof?format=swagger-json&export=true&api-version=2024-05-01"
 $access = Invoke-AzJson @('account', 'get-access-token', '--subscription', $identity.subscriptionId,
     '--resource', 'https://management.azure.com/', '-o', 'json')
 $export = Invoke-RestMethod -Uri $url -Headers @{ Authorization = "Bearer $($access.accessToken)" }
@@ -19,7 +19,7 @@ if ($null -eq $definition -or $definition.swagger -ne '2.0') {
     throw 'APIM export did not return an inline Swagger 2 definition.'
 }
 $definition.host = ([Uri]$azure.gatewayUrl).Host
-$definition.basePath = '/cz'
+$definition.basePath = '/contoso'
 $definition.info.version = $Version
 $security = @{
     oauth2 = @{

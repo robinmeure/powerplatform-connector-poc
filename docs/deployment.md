@@ -18,7 +18,7 @@ Validate infrastructure and obtain cost approval before deploying. APIM Develope
   -TenantId <approved-tenant-guid> `
   -Location <approved-azure-region> `
   -ResourceGroup <isolated-demo-resource-group> `
-  -PublisherName 'CZ Connector PoC' `
+  -PublisherName 'Contoso Connector PoC' `
   -PublisherEmail <publisher-email>
 
 .\scripts\Test-LiveBoundary.ps1

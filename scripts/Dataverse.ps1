@@ -6,7 +6,7 @@ function New-DemoDataverseSession {
         [Parameter(Mandatory)][Guid]$SubscriptionId,
         [Parameter(Mandatory)][Guid]$EnvironmentId,
         [Parameter(Mandatory)][Uri]$EnvironmentUrl,
-        [Parameter(Mandatory)][ValidateSet('CZ Connector PoC Build', 'CZ Connector PoC')][string]$ExpectedName,
+        [Parameter(Mandatory)][ValidateSet('Contoso Connector PoC Build', 'Contoso Connector PoC')][string]$ExpectedName,
         [ValidateSet('europe', 'switzerland')][string]$ExpectedLocation = 'europe'
     )
     Assert-Tenant -TenantId $TenantId -SubscriptionId $SubscriptionId

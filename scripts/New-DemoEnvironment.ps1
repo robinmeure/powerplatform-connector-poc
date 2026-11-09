@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory)][Guid]$TenantId,
     [Parameter(Mandatory)][Guid]$SubscriptionId,
-    [Parameter(Mandatory)][ValidateSet('CZ Connector PoC Build', 'CZ Connector PoC')][string]$DisplayName,
+    [Parameter(Mandatory)][ValidateSet('Contoso Connector PoC Build', 'Contoso Connector PoC')][string]$DisplayName,
     [Parameter(Mandatory)][ValidatePattern('^[a-z0-9-]+$')][string]$DomainName,
     [string]$ModulePath = 'Microsoft.PowerApps.Administration.PowerShell'
 )

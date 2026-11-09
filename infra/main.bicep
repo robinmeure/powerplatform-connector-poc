@@ -5,12 +5,12 @@ param publisherName string
 param publisherEmail string
 @minLength(3)
 @maxLength(20)
-param prefix string = 'czconnector'
+param prefix string = 'contosoconnector'
 param tenantId string
 param backendClientId string
 
 var suffix = uniqueString(resourceGroup().id)
-var tags = { purpose: 'cz-connector-poc' }
+var tags = { purpose: 'contoso-connector-poc' }
 
 resource apim 'Microsoft.ApiManagement/service@2024-05-01' = {
   name: '${prefix}-apim-${suffix}'

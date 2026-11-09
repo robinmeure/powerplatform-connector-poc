@@ -9,10 +9,10 @@ param(
 )
 . "$PSScriptRoot\Dataverse.ps1"
 $session = New-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
-    -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'CZ Connector PoC Build' `
+    -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'Contoso Connector PoC Build' `
     -ExpectedLocation $ExpectedLocation
 $before = Invoke-Dataverse $session "connectors($ConnectorId)"
-if ($before.displayname -ne 'CZ Connector Proof' -or $before.ismanaged) {
+if ($before.displayname -ne 'Contoso Connector Proof' -or $before.ismanaged) {
     throw 'Only the unmanaged demo authoring connector may be changed.'
 }
 $directory = Join-Path $PSScriptRoot '..\out\connector-persisted'

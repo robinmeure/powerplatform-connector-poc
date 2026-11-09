@@ -9,13 +9,13 @@ param(
 )
 . "$PSScriptRoot\Dataverse.ps1"
 $session = New-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
-    -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'CZ Connector PoC' `
+    -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'Contoso Connector PoC' `
     -ExpectedLocation $ExpectedLocation
-$connectors = Invoke-Dataverse $session "connectors?`$filter=displayname eq 'CZ Connector Proof'"
-$references = Invoke-Dataverse $session "connectionreferences?`$filter=connectionreferencelogicalname eq 'cz_CZProofConnection'"
-$flows = Invoke-Dataverse $session "workflows?`$filter=name eq 'CZ Identity Boundary Proof' and category eq 5"
-$solutions = Invoke-Dataverse $session "solutions?`$filter=uniquename eq 'CZPoCConnector'"
-$consumerSolutions = Invoke-Dataverse $session "solutions?`$filter=uniquename eq 'CZPoCConsumer'"
+$connectors = Invoke-Dataverse $session "connectors?`$filter=displayname eq 'Contoso Connector Proof'"
+$references = Invoke-Dataverse $session "connectionreferences?`$filter=connectionreferencelogicalname eq 'contoso_ContosoProofConnection'"
+$flows = Invoke-Dataverse $session "workflows?`$filter=name eq 'Contoso Identity Boundary Proof' and category eq 5"
+$solutions = Invoke-Dataverse $session "solutions?`$filter=uniquename eq 'ContosoPoCConnector'"
+$consumerSolutions = Invoke-Dataverse $session "solutions?`$filter=uniquename eq 'ContosoPoCConsumer'"
 if ($connectors.value.Count -ne 1 -or $references.value.Count -ne 1 -or
     $flows.value.Count -ne 1 -or $solutions.value.Count -ne 1 -or $consumerSolutions.value.Count -ne 1) {
     throw 'Expected exactly one managed demo connector, reference, flow and connector solution.'

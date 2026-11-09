@@ -1,4 +1,4 @@
-# CZ Power Platform Custom Connector PoC
+# Contoso Power Platform Custom Connector PoC
 
 Working example of centrally managed Power Platform Custom Connectors over Azure API Management, with separate managed connector/consumer solutions and Azure DevOps deployment templates.
 
@@ -8,7 +8,9 @@ See [architecture](docs/architecture.md), [deployment](docs/deployment.md), and 
 
 The update was not a blind managed import: guards caught PAC dropping the subscription-header policy, duplicate connector packaging in the consumer, and an Active layer masking the update. The verified procedure preserves persisted properties and restores recorded target-specific federation metadata after the approved layer removal. See the deployment guide for these important ALM limitations. Azure DevOps remains an unexecuted template, not an automated-promotion proof.
 
-Read the [detailed implementation summary](docs/implementation-summary.md) for what was built, why each step was necessary, the original four CZ requirements, real run evidence, and the limitations discovered.
+Read the [detailed implementation summary](docs/implementation-summary.md) for what was built, why each step was necessary, the original four Contoso requirements, real run evidence, and the limitations discovered.
+
+**Naming note:** Contoso names throughout this repository are illustrative replacements for the original demo names, including resource URLs and runtime identifiers in historical evidence. This source-only rename does not rename deployed resources or migrate existing solutions, Connections, federation metadata, or ignored local artifacts. Before using these scripts with an existing deployment, reconcile its actual names, ownership tags, identifiers and local configuration; the renamed URLs are not verified live endpoints.
 
 ## Retained demo inventory
 
@@ -18,22 +20,22 @@ The user chose to **keep the deployed demo**. These non-secret identifiers descr
 |------|----------------|
 | Azure subscription | `ME-MngEnvMCAP935538-rmeure-1` / `17254a3c-2e67-4fec-9e2c-cfe17cfb579d` |
 | Entra tenant | `63645c73-a00c-4659-b911-eb6c4c2d4a8f` |
-| Resource group / Azure region | `rg-cz-connector-poc-demo` / Sweden Central (`swedencentral`) |
-| API Management | `czconnector-apim-hvngf2rwwvf7a`, Developer; [gateway](https://czconnector-apim-hvngf2rwwvf7a.azure-api.net), API `cz-proof`, path `/cz` |
-| APIM Product / subscription | `cz-developers` / `cz-demo-connection`; key values are deliberately not included |
-| Backend / App Service plan | `czconnector-api-hvngf2rwwvf7a` / `czconnector-plan-hvngf2rwwvf7a`, Linux B1; [.NET backend health](https://czconnector-api-hvngf2rwwvf7a.azurewebsites.net/health) |
-| Authoring environment | **CZ Connector PoC Build**, Developer, `5a181d17-9728-ebe9-ab82-31716241a959`; Switzerland North; [Dataverse](https://orgf976f77f.crm17.dynamics.com/), [maker solutions](https://make.powerapps.com/environments/5a181d17-9728-ebe9-ab82-31716241a959/solutions/) |
-| Managed-solution target | **CZ Connector PoC**, Developer, `9428be14-6fc4-e1a0-9f36-28db26e7b952`; Switzerland West; [Dataverse](https://orgc9d38663.crm17.dynamics.com/), [maker solutions](https://make.powerapps.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/) |
-| Target connector solution | [CZPoCConnector](https://make.powerapps.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/09a336a4-a4bf-4c6e-acb9-68c1d93972b7), managed `1.0.1.0`; effective OpenAPI definition `1.0.1` |
-| Target consumer solution | [CZPoCConsumer](https://make.powerautomate.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/1a2e4f0c-4d7e-4275-bc6d-ec636e92ebfd), managed `1.0.1.0` |
-| Existing managed flow | [CZ Identity Boundary Proof](https://make.powerautomate.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/~preferred/flows/6c551e3f-21d9-f111-84e8-70a8a5079ecf/details), On; workflow `6c551e3f-21d9-f111-84e8-70a8a5079ecf` |
-| Existing Connection / Reference | `a70df4ce-b90d-43c4-9f07-5119-03bc0036` / `616ee0b0-092b-4313-9a4a-443ba727ec62`, logical reference `cz_CZProofConnection` |
+| Resource group / Azure region | `rg-contoso-connector-poc-demo` / Sweden Central (`swedencentral`) |
+| API Management | `contosoconnector-apim-hvngf2rwwvf7a`, Developer; [gateway](https://contosoconnector-apim-hvngf2rwwvf7a.azure-api.net), API `contoso-proof`, path `/contoso` |
+| APIM Product / subscription | `contoso-developers` / `contoso-demo-connection`; key values are deliberately not included |
+| Backend / App Service plan | `contosoconnector-api-hvngf2rwwvf7a` / `contosoconnector-plan-hvngf2rwwvf7a`, Linux B1; [.NET backend health](https://contosoconnector-api-hvngf2rwwvf7a.azurewebsites.net/health) |
+| Authoring environment | **Contoso Connector PoC Build**, Developer, `5a181d17-9728-ebe9-ab82-31716241a959`; Switzerland North; [Dataverse](https://orgf976f77f.crm17.dynamics.com/), [maker solutions](https://make.powerapps.com/environments/5a181d17-9728-ebe9-ab82-31716241a959/solutions/) |
+| Managed-solution target | **Contoso Connector PoC**, Developer, `9428be14-6fc4-e1a0-9f36-28db26e7b952`; Switzerland West; [Dataverse](https://orgc9d38663.crm17.dynamics.com/), [maker solutions](https://make.powerapps.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/) |
+| Target connector solution | [ContosoPoCConnector](https://make.powerapps.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/09a336a4-a4bf-4c6e-acb9-68c1d93972b7), managed `1.0.1.0`; effective OpenAPI definition `1.0.1` |
+| Target consumer solution | [ContosoPoCConsumer](https://make.powerautomate.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/1a2e4f0c-4d7e-4275-bc6d-ec636e92ebfd), managed `1.0.1.0` |
+| Existing managed flow | [Contoso Identity Boundary Proof](https://make.powerautomate.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/~preferred/flows/6c551e3f-21d9-f111-84e8-70a8a5079ecf/details), On; workflow `6c551e3f-21d9-f111-84e8-70a8a5079ecf` |
+| Existing Connection / Reference | `a70df4ce-b90d-43c4-9f07-5119-03bc0036` / `616ee0b0-092b-4313-9a4a-443ba727ec62`, logical reference `contoso_ContosoProofConnection` |
 
 Both Power Platform environments use Dataverse and the existing Developer entitlement. Switzerland placement within **European Union & EFTA** was explicitly approved; it is not exact-Europe placement. "Managed target" means managed solution imports, not a licensed Managed Environment.
 
 ## Open and run the existing demo
 
-1. Sign in to the approved tenant with an account that has access to the retained target, then open [CZ Identity Boundary Proof](https://make.powerautomate.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/~preferred/flows/6c551e3f-21d9-f111-84e8-70a8a5079ecf/details). Confirm the environment is **CZ Connector PoC**, not Build or an unrelated environment.
+1. Sign in to the approved tenant with an account that has access to the retained target, then open [Contoso Identity Boundary Proof](https://make.powerautomate.com/environments/9428be14-6fc4-e1a0-9f36-28db26e7b952/solutions/~preferred/flows/6c551e3f-21d9-f111-84e8-70a8a5079ecf/details). Confirm the environment is **Contoso Connector PoC**, not Build or an unrelated environment, accounting for the naming note above.
 2. Select **Run > Run flow**. Use the existing Connection; there is no need to recreate or reconnect the verified entry merely to demonstrate the update.
 3. Open the new run and expand **Get identity proof**. Expect HTTP `200`, `callerIsApim=true`, `callerClientIsApim=true`, role `Demo.Invoke`, `delegatedScopePresent=false`, and `userContextPresent=false`. Backend version remains `1.0.0`; connector definition version is independently `1.0.1`.
 

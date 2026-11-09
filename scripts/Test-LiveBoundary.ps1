@@ -8,16 +8,16 @@ param(
 $identity = Get-Content -LiteralPath $IdentityPath -Raw | ConvertFrom-Json
 $azure = Get-Content -LiteralPath $AzurePath -Raw | ConvertFrom-Json
 Assert-Tenant -TenantId $identity.tenantId -SubscriptionId $identity.subscriptionId
-$subscription = "https://management.azure.com/subscriptions/$($identity.subscriptionId)/resourceGroups/$($azure.resourceGroup)/providers/Microsoft.ApiManagement/service/$($azure.apimName)/subscriptions/cz-demo-connection/listSecrets?api-version=2024-05-01"
+$subscription = "https://management.azure.com/subscriptions/$($identity.subscriptionId)/resourceGroups/$($azure.resourceGroup)/providers/Microsoft.ApiManagement/service/$($azure.apimName)/subscriptions/contoso-demo-connection/listSecrets?api-version=2024-05-01"
 $keys = Invoke-AzJson @('rest', '--method', 'post', '--url', $subscription, '-o', 'json')
 $armToken = Invoke-AzJson @('account', 'get-access-token', '--subscription', $identity.subscriptionId,
     '--resource', 'https://management.azure.com/', '-o', 'json')
 $cases = @(
-    @{ name = 'missing-subscription'; url = "$($azure.gatewayUrl)/cz/proof"; headers = @{}; expected = 401 },
-    @{ name = 'invalid-subscription'; url = "$($azure.gatewayUrl)/cz/proof"; headers = @{ 'Ocp-Apim-Subscription-Key' = 'deliberately-invalid' }; expected = 401 },
-    @{ name = 'missing-delegated-token'; url = "$($azure.gatewayUrl)/cz/proof"; headers = @{ 'Ocp-Apim-Subscription-Key' = $keys.primaryKey }; expected = 401 },
-    @{ name = 'malformed-token'; url = "$($azure.gatewayUrl)/cz/proof"; headers = @{ 'Ocp-Apim-Subscription-Key' = $keys.primaryKey; Authorization = 'Bearer deliberately-invalid' }; expected = 401 },
-    @{ name = 'real-token-wrong-audience'; url = "$($azure.gatewayUrl)/cz/proof"; headers = @{ 'Ocp-Apim-Subscription-Key' = $keys.primaryKey; Authorization = "Bearer $($armToken.accessToken)" }; expected = 401 },
+    @{ name = 'missing-subscription'; url = "$($azure.gatewayUrl)/contoso/proof"; headers = @{}; expected = 401 },
+    @{ name = 'invalid-subscription'; url = "$($azure.gatewayUrl)/contoso/proof"; headers = @{ 'Ocp-Apim-Subscription-Key' = 'deliberately-invalid' }; expected = 401 },
+    @{ name = 'missing-delegated-token'; url = "$($azure.gatewayUrl)/contoso/proof"; headers = @{ 'Ocp-Apim-Subscription-Key' = $keys.primaryKey }; expected = 401 },
+    @{ name = 'malformed-token'; url = "$($azure.gatewayUrl)/contoso/proof"; headers = @{ 'Ocp-Apim-Subscription-Key' = $keys.primaryKey; Authorization = 'Bearer deliberately-invalid' }; expected = 401 },
+    @{ name = 'real-token-wrong-audience'; url = "$($azure.gatewayUrl)/contoso/proof"; headers = @{ 'Ocp-Apim-Subscription-Key' = $keys.primaryKey; Authorization = "Bearer $($armToken.accessToken)" }; expected = 401 },
     @{ name = 'direct-backend-anonymous'; url = "$($azure.backendUrl)/proof"; headers = @{}; expected = 401 }
 )
 $results = foreach ($case in $cases) {

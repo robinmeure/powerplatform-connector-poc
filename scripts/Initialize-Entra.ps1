@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory)][Guid]$TenantId,
     [Parameter(Mandatory)][Guid]$SubscriptionId,
-    [ValidatePattern('^[a-zA-Z0-9-]{3,40}$')][string]$Prefix = 'cz-connector-poc',
+    [ValidatePattern('^[a-zA-Z0-9-]{3,40}$')][string]$Prefix = 'contoso-connector-poc',
     [string]$OutputPath = (Join-Path $PSScriptRoot '..\out\identity.local.json')
 )
 . "$PSScriptRoot\Common.ps1"
@@ -17,12 +17,12 @@ function Get-OrCreateApplication {
     if ($found.value.Count -gt 1) { throw "Ambiguous application display name: $Name" }
     if ($found.value.Count -eq 1) {
         $app = $found.value[0]
-        if ($app.tags -notcontains 'CZConnectorPoC') { throw "Application is not demo-owned: $Name" }
+        if ($app.tags -notcontains 'ContosoConnectorPoC') { throw "Application is not demo-owned: $Name" }
         Invoke-Graph -Path "applications/$($app.id)" -Method PATCH -Body $Properties | Out-Null
         return $app
     }
     return Invoke-Graph -Path 'applications' -Method POST -Body ($Properties + @{
-        displayName = $Name; tags = @('CZConnectorPoC')
+        displayName = $Name; tags = @('ContosoConnectorPoC')
     })
 }
 
@@ -39,8 +39,8 @@ $frontend = Get-OrCreateApplication "$Prefix-frontend" @{
         requestedAccessTokenVersion = 2
         oauth2PermissionScopes = @(@{
             id = $scopeId; value = 'Demo.Read'; type = 'Admin'; isEnabled = $true
-            adminConsentDisplayName = 'Invoke the CZ demo through APIM'
-            adminConsentDescription = 'Allows delegated access to the CZ demonstration API.'
+            adminConsentDisplayName = 'Invoke the Contoso demo through APIM'
+            adminConsentDescription = 'Allows delegated access to the Contoso demonstration API.'
         })
     }
 }
@@ -54,7 +54,7 @@ $backend = Get-OrCreateApplication "$Prefix-backend" @{
     api = @{ requestedAccessTokenVersion = 2 }
     optionalClaims = @{ accessToken = @(@{ name = 'idtyp'; essential = $false; additionalProperties = @() }) }
     appRoles = @(@{
-        id = $roleId; value = 'Demo.Invoke'; displayName = 'Invoke CZ backend'
+        id = $roleId; value = 'Demo.Invoke'; displayName = 'Invoke Contoso backend'
         description = 'Allows the APIM application identity to invoke the backend.'
         allowedMemberTypes = @('Application'); isEnabled = $true
     })

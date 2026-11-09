@@ -44,7 +44,7 @@ public sealed class ConnectorContractTests
         var operationId = connector.RootElement.GetProperty("paths").GetProperty("/proof")
             .GetProperty("get").GetProperty("operationId").GetString();
         var properties = flow.RootElement.GetProperty("properties");
-        Assert.Equal("cz_CZProofConnection", properties.GetProperty("connectionReferences").GetProperty("__API_NAME__")
+        Assert.Equal("contoso_ContosoProofConnection", properties.GetProperty("connectionReferences").GetProperty("__API_NAME__")
             .GetProperty("connection").GetProperty("connectionReferenceLogicalName").GetString());
         Assert.Equal(operationId, properties.GetProperty("definition").GetProperty("actions")
             .GetProperty("Get_identity_proof").GetProperty("inputs").GetProperty("host").GetProperty("operationId").GetString());

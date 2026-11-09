@@ -6,7 +6,7 @@ param(
     [Parameter(Mandatory)][string]$ResourceGroup,
     [Parameter(Mandatory)][string]$PublisherName,
     [Parameter(Mandatory)][string]$PublisherEmail,
-    [string]$Prefix = 'czconnector'
+    [string]$Prefix = 'contosoconnector'
 )
 . "$PSScriptRoot\Common.ps1"
 Assert-Tenant -TenantId $TenantId -SubscriptionId $SubscriptionId
@@ -19,10 +19,10 @@ $identity = Get-Content (Join-Path $out 'identity.local.json') -Raw | ConvertFro
 $exists = Invoke-Az @('group', 'exists', '--subscription', "$SubscriptionId", '--name', $ResourceGroup)
 if (($exists -join '').Trim() -eq 'true') {
     $group = Invoke-AzJson @('group', 'show', '--subscription', "$SubscriptionId", '--name', $ResourceGroup, '-o', 'json')
-    if ($group.tags.purpose -ne 'cz-connector-poc') { throw 'Existing resource group is not demo-owned.' }
+    if ($group.tags.purpose -ne 'contoso-connector-poc') { throw 'Existing resource group is not demo-owned.' }
 }
 $deployment = Invoke-AzJson @('deployment', 'sub', 'create', '--subscription', "$SubscriptionId",
-    '--location', $Location, '--name', 'cz-connector-poc',
+    '--location', $Location, '--name', 'contoso-connector-poc',
     '--template-file', (Join-Path $root 'infra\deployment.bicep'), '--parameters',
     "resourceGroupName=$ResourceGroup",
     "location=$Location", "publisherName=$PublisherName", "publisherEmail=$PublisherEmail",
@@ -51,7 +51,7 @@ Compress-Archive -Path "$publish\*" -DestinationPath $zip -Force
 Invoke-Az @('webapp', 'deploy', '--subscription', "$SubscriptionId", '--resource-group', $ResourceGroup,
     '--name', $values.backendName.value, '--src-path', $zip, '--type', 'zip', '-o', 'none') | Out-Null
 Invoke-Az @('deployment', 'group', 'create', '--subscription', "$SubscriptionId", '--resource-group',
-    $ResourceGroup, '--name', 'cz-api', '--template-file', (Join-Path $root 'infra\api.bicep'),
+    $ResourceGroup, '--name', 'contoso-api', '--template-file', (Join-Path $root 'infra\api.bicep'),
     '--parameters', "apimName=$($values.apimName.value)", "backendUrl=$($values.backendUrl.value)",
     "tenantId=$TenantId", "frontendClientId=$($identity.frontendClientId)",
     "connectorClientId=$($identity.connectorClientId)", "backendClientId=$($identity.backendClientId)",

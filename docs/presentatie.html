@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="De bevindingen van de Power Platform Custom Connector PoC: identiteit, APIM, beheer, distributie en veilige onboarding.">
+  <title>Van werkende connector naar centraal beheer | INET &amp; PPE</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f7f8f5;
+      --white: #fff;
+      --ink: #203339;
+      --muted: #526269;
+      --line: #cbd4d2;
+      --accent: #006557;
+      --accent-soft: #e6f1ec;
+      --navy: #183c48;
+      --navy-soft: #e9f0f4;
+      --amber: #80500f;
+      --amber-soft: #fff1d9;
+      --rail: 17rem;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 2rem; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font: 1rem/1.65 "Segoe UI", Arial, sans-serif; }
+    ::selection { background: #c9e6d9; color: var(--ink); }
+    a { color: var(--accent); text-underline-offset: .22em; text-decoration-thickness: 1px; }
+    a:hover { text-decoration-thickness: 2px; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; }
+    button, summary, a { -webkit-tap-highlight-color: transparent; }
+    button { font: inherit; cursor: pointer; }
+    button:disabled { cursor: default; opacity: .5; }
+    p { margin: .75rem 0 1.1rem; max-width: 72ch; }
+    ul, ol { padding-left: 1.3rem; }
+    li { margin: .55rem 0; }
+    h1, h2, h3 { line-height: 1.15; text-wrap: balance; }
+    h1, h2 { font-family: Georgia, "Times New Roman", serif; font-weight: 400; letter-spacing: -.025em; }
+    h1 { font-size: clamp(2.6rem, 5vw, 4.8rem); margin: 1.7rem 0; max-width: 17ch; }
+    h2 { font-size: clamp(2rem, 3.2vw, 3rem); margin: 0 0 1.3rem; }
+    h3 { font-size: 1.2rem; margin: 1.8rem 0 .7rem; }
+    strong { font-weight: 650; }
+    code { font: .9em/1.4 Consolas, monospace; overflow-wrap: anywhere; }
+    .skip { position: fixed; top: -6rem; left: 1rem; padding: .8rem 1rem; z-index: 20; background: var(--white); }
+    .skip:focus { top: 1rem; }
+    .rail { position: fixed; inset: 0 auto 0 0; width: var(--rail); padding: 2.2rem 1.8rem; border-right: 1px solid var(--line); display: flex; flex-direction: column; background: var(--paper); overflow-y: auto; z-index: 5; }
+    .identity { display: flex; align-items: center; gap: .75rem; font-weight: 700; font-size: 1.1rem; letter-spacing: -.025em; }
+    .identity svg { width: 30px; height: 30px; color: var(--accent); flex-shrink: 0; }
+    .rail-subtitle { color: var(--muted); font-size: .85rem; margin: .35rem 0 2rem; }
+    .chapters { display: grid; gap: .25rem; }
+    .chapters a { color: var(--muted); text-decoration: none; padding: .55rem .7rem; border-radius: 4px; font-size: .92rem; min-height: 44px; }
+    .chapters a:hover { color: var(--ink); background: #edf0ec; }
+    .chapters a[aria-current="location"] { color: var(--accent); background: var(--accent-soft); font-weight: 650; }
+    .rail-bottom { margin-top: auto; padding-top: 2rem; font-size: .8rem; color: var(--muted); }
+    .rail-bottom p { margin: .4rem 0; }
+    .rail-bottom a { color: inherit; }
+    .page { margin-left: var(--rail); max-width: 108rem; }
+    .toolbar { padding: 1.3rem clamp(1.4rem, 4.5vw, 5rem); display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid var(--line); }
+    .toolbar p { margin: 0; font-size: .85rem; color: var(--muted); }
+    .actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .action { background: transparent; border: 1px solid var(--line); border-radius: 4px; padding: .45rem .8rem; color: var(--ink); font-size: .85rem; min-height: 44px; }
+    .action:hover { background: var(--white); border-color: var(--accent); }
+    [hidden] { display: none !important; }
+    main { padding: 0 clamp(1.4rem, 4.5vw, 5rem); max-width: 90rem; margin: auto; }
+    section { padding: 4.5rem 0; border-bottom: 1px solid var(--line); scroll-margin-top: 1rem; }
+    .cover { padding-top: 2.8rem; }
+    .cover-meta { color: var(--muted); font-size: .85rem; margin: 0; }
+    .lede { font-size: clamp(1.15rem, 1.65vw, 1.4rem); line-height: 1.55; max-width: 58ch; }
+    .cover-bottom { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 2rem; }
+    .jump { font-weight: 650; }
+    .legend { display: flex; flex-wrap: wrap; gap: .6rem; }
+    .tag { display: inline-block; font-size: .76rem; line-height: 1.5; font-weight: 650; padding: .2rem .55rem; border-radius: 3px; white-space: nowrap; }
+    .proven { color: var(--accent); background: var(--accent-soft); }
+    .advice { color: var(--navy); background: var(--navy-soft); }
+    .open { color: var(--amber); background: var(--amber-soft); }
+    .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+    .section-heading .tag { margin-top: .55rem; }
+    .intro { font-size: 1.15rem; color: var(--muted); }
+    .summary { display: grid; grid-template-columns: 1.1fr 1fr; gap: 2.5rem; margin-top: 2.5rem; }
+    .recommendation { background: var(--navy); color: white; padding: 1.8rem 2rem; border-radius: 5px; }
+    .recommendation h2, .recommendation h3 { margin-top: 0; font-size: 1.4rem; font-family: "Segoe UI", Arial, sans-serif; font-weight: 650; letter-spacing: normal; }
+    .recommendation p { color: #e3edef; }
+    .recommendation a { color: white; }
+    .decision-list { list-style: none; padding: 0; margin: 0; }
+    .decision-list li { padding: .9rem 0; margin: 0; border-bottom: 1px solid var(--line); }
+    .decision-list li:first-child { padding-top: 0; }
+    .decision-list strong { display: block; }
+    .decision-list span { color: var(--muted); font-size: .95rem; }
+    .flow { display: grid; grid-template-columns: 1fr 3rem 1fr 3rem 1fr; gap: .5rem; align-items: stretch; margin: 2rem 0 1rem; }
+    .flow-node { padding: 1.4rem; background: var(--white); border: 1px solid var(--line); border-radius: 4px; }
+    .flow-node.focus { background: var(--navy); color: white; border-color: var(--navy); }
+    .flow-node h3 { margin: 0 0 .7rem; font-size: 1.1rem; }
+    .flow-node p { font-size: .9rem; margin: .5rem 0 0; }
+    .flow-node small { display: block; margin-top: 1rem; font-size: .8rem; }
+    .flow-arrow { display: grid; place-items: center; color: var(--accent); }
+    .flow-arrow svg { width: 32px; height: 32px; }
+    figure { margin: 0; }
+    figcaption, .note { color: var(--muted); font-size: .9rem; max-width: 75ch; }
+    .columns { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; margin-top: 1rem; }
+    .columns > div > h3:first-child { margin-top: 1rem; }
+    .callout { padding: 1.2rem 1.5rem; margin: 1.8rem 0; background: var(--amber-soft); border-radius: 4px; }
+    .callout p { margin: 0; }
+    .callout.good { background: var(--accent-soft); }
+    details { border-top: 1px solid var(--line); margin-top: 1.4rem; }
+    summary { cursor: pointer; padding: 1.05rem .3rem; font-weight: 650; }
+    summary:hover { color: var(--accent); }
+    details[open] > summary { color: var(--accent); }
+    .detail-body { padding: 0 .3rem 1rem; }
+    .detail-body > :first-child { margin-top: .3rem; }
+    .table-wrap { overflow-x: auto; margin: 1.7rem 0; border: 1px solid var(--line); border-radius: 4px; scrollbar-color: var(--muted) var(--paper); }
+    table { border-collapse: collapse; width: 100%; font-size: .93rem; text-align: left; }
+    caption { text-align: left; padding: .9rem 1rem; font-weight: 650; background: var(--white); }
+    th, td { padding: 1rem; vertical-align: top; border-top: 1px solid var(--line); min-width: 9rem; }
+    th { font-weight: 650; }
+    thead { background: #eaf0ec; }
+    tbody th { width: 25%; }
+    tbody tr:nth-child(even) { background: #f0f3ef; }
+    td .tag { margin-bottom: .35rem; }
+    .sequence { list-style: none; padding: 0; counter-reset: step; }
+    .sequence li { counter-increment: step; display: grid; grid-template-columns: 2rem 1fr; gap: .8rem; padding: .7rem 0; margin: 0; border-bottom: 1px solid var(--line); }
+    .sequence li::before { content: counter(step); color: var(--accent); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .sequence strong { display: block; }
+    .evidence { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+    .evidence h3 { display: flex; align-items: center; gap: .6rem; }
+    .faq details { margin: 0; }
+    .faq summary { padding: 1.25rem .3rem; }
+    .sources { display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; }
+    .sources ul { list-style: none; padding: 0; }
+    .sources li { margin: .7rem 0; }
+    footer { padding: 2rem 0; display: flex; justify-content: space-between; gap: 1rem; font-size: .85rem; color: var(--muted); }
+    footer p { margin: 0; }
+    @media (min-width: 1600px) { :root { --rail: 19rem; } }
+    @media (max-width: 1050px) {
+      :root { --rail: 14rem; }
+      .rail { padding: 1.6rem 1rem; }
+      .toolbar { flex-wrap: wrap; }
+      .summary, .columns, .evidence, .sources { gap: 1.5rem; }
+      .flow { grid-template-columns: 1fr; gap: .5rem; }
+      .flow-arrow { height: 1.5rem; }
+      .flow-arrow svg { transform: rotate(90deg); }
+      .flow-node { padding: 1.1rem 1.3rem; }
+      .flow-node small { margin-top: .5rem; }
+    }
+    @media (max-width: 760px) {
+      html { scroll-padding-top: 8rem; }
+      .rail { position: sticky; inset: 0 0 auto; width: auto; padding: .8rem 1.1rem .5rem; border-right: 0; border-bottom: 1px solid var(--line); overflow: visible; }
+      .identity { font-size: .95rem; }
+      .identity svg { width: 24px; height: 24px; }
+      .rail-subtitle, .rail-bottom { display: none; }
+      .chapters { display: flex; overflow-x: auto; gap: .25rem; margin-top: .7rem; padding: .3rem .1rem .5rem; scrollbar-width: thin; scrollbar-color: var(--muted) var(--paper); }
+      .chapters a { white-space: nowrap; font-size: .82rem; padding: .4rem .65rem; }
+      .page { margin-left: 0; }
+      .toolbar { padding: 1rem 1.4rem; }
+      .toolbar p { font-size: .8rem; }
+      section { padding: 3rem 0; }
+      .cover { padding-top: 2rem; }
+      .cover-bottom, .section-heading { align-items: flex-start; flex-direction: column; }
+      .section-heading { gap: 0; }
+      .section-heading .tag { margin: 0 0 1rem; }
+      .summary, .columns, .evidence, .sources { grid-template-columns: 1fr; gap: 1rem; }
+      .recommendation { padding: 1.5rem; }
+      h1 { font-size: clamp(2.5rem, 9.5vw, 3.8rem); }
+      .table-wrap { max-width: 100%; }
+      footer { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    @page { size: A4; margin: 16mm; }
+    @media print {
+      body { background: white; font-size: 10pt; color: #172a30; }
+      .rail, .toolbar, .skip, .cover-bottom .jump, footer > a { display: none; }
+      .page { margin: 0; max-width: none; }
+      main { padding: 0; max-width: none; }
+      section { padding: 1.2rem 0; break-before: page; border: 0; }
+      .cover { break-before: auto; padding-top: 0; }
+      h1 { font-size: 36pt; max-width: 20ch; }
+      h2 { font-size: 25pt; }
+      h3 { break-after: avoid; }
+      p, li { orphans: 3; widows: 3; }
+      .summary, .columns, .evidence, .sources { gap: 1.2rem; }
+      .flow { grid-template-columns: 1fr; }
+      .flow-arrow { height: 1.2rem; }
+      .flow-arrow svg { transform: rotate(90deg); }
+      .flow-node, .recommendation { background: white !important; color: #172a30 !important; border: 1px solid #879998; }
+      .recommendation p { color: #172a30; }
+      .recommendation a { color: #006557; }
+      .tag { border: 1px solid currentColor; }
+      .table-wrap { overflow: visible; }
+      th, td { min-width: 0; padding: .6rem; }
+      tr, .callout, .flow-node { break-inside: avoid; }
+      thead { display: table-header-group; }
+      details > .detail-body { display: block !important; }
+      details::details-content { content-visibility: visible; display: block; }
+      summary { list-style: none; }
+      .note, figcaption { color: #344b52; }
+      a { color: #006557; }
+      footer { border-top: 1px solid #879998; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip" href="#inhoud">Ga naar de inhoud</a>
+  <aside class="rail" aria-label="Presentatienavigatie">
+    <div class="identity">
+      <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="2" y="5" width="10" height="10" rx="2"/><rect x="20" y="17" width="10" height="10" rx="2"/><path d="M12 10h8v12M12 22H7v-7"/></svg>
+      INET &amp; PPE
+    </div>
+    <p class="rail-subtitle">Power Platform / APIM</p>
+    <nav class="chapters" aria-label="Hoofdstukken">
+      <a href="#overzicht" aria-current="location">Overzicht &amp; advies</a>
+      <a href="#identiteit">Delegated of app-only</a>
+      <a href="#obo">APIM MI + gebruikerscontext</a>
+      <a href="#inet">1. API beschikbaar stellen</a>
+      <a href="#connector">2. Connector realiseren</a>
+      <a href="#distributie">3. Centraal distribueren</a>
+      <a href="#gebruik">4. Teams onboarden</a>
+      <a href="#bewijs">Wat is bewezen?</a>
+      <a href="#vervolgvragen">De 7 vervolgvragen</a>
+      <a href="#besluiten">Besluiten &amp; vervolgstappen</a>
+      <a href="#bronnen">Bronnen</a>
+    </nav>
+    <div class="rail-bottom">
+      <p>Architectuurbriefing<br>11 november 2026</p>
+      <p>Inclusief second opinion.<br>Geen productiecertificering.</p>
+      <a href="authenticatie-keuze.md">Uitgebreide keuzegids</a>
+    </div>
+  </aside>
+  <div class="page">
+    <header class="toolbar">
+      <p>Voor architecten, INET, PPE en developmentteams</p>
+      <div class="actions">
+        <button class="action" id="details-toggle" type="button" hidden>Alle details openen</button>
+        <button class="action" id="print" type="button" hidden>Afdrukken / PDF</button>
+      </div>
+    </header>
+    <main id="inhoud" tabindex="-1">
+      <section id="overzicht" class="cover" aria-labelledby="titel">
+        <p class="cover-meta">Samenvatting van de PoC en architectuurkeuzes &middot; 11 november 2026</p>
+        <h1 id="titel">Van werkende connector naar centraal beheer.</h1>
+        <p class="lede">De verbinding werkt. De volgende stap is niet nog een connector, maar een herhaalbare inrichting van identiteit, updates en onboarding.</p>
+        <div class="cover-bottom">
+          <a class="jump" href="#identiteit">Begin bij de identiteitsgrens</a>
+          <div class="legend" aria-label="Leeswijzer voor bewijsstatus">
+            <span class="tag proven">Bewezen in PoC</span>
+            <span class="tag advice">Advies</span>
+            <span class="tag open">Nog valideren</span>
+          </div>
+        </div>
+        <div class="summary">
+          <div class="recommendation">
+            <h2>Behoud de werkende route waar gebruikerscontext past.</h2>
+            <p>Delegated OAuth naar APIM, daarna APIM Managed Identity naar de backend. Geen extra tussenservice nodig.</p>
+            <p>Begin met directe managed solution-deployments. Behandel volledig gebruikersvrije uitvoering als een afzonderlijke architectuurkeuze.</p>
+            <a href="#besluiten">Bekijk de beslispunten</a>
+          </div>
+          <ul class="decision-list">
+            <li><strong>De backend is al app-only.</strong><span>De verbinding van Power Platform naar APIM is dat niet.</span></li>
+            <li><strong>Een compatibele update is aangetoond.</strong><span>Met dezelfde Connection en Reference, na gecontroleerde correcties.</span></li>
+            <li><strong>Volledige automatisering is nog geen feit.</strong><span>Federation/layers, eerste Connections en secretvrije onboarding blijven acceptatiepunten.</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="identiteit" aria-labelledby="identiteit-titel">
+        <div class="section-heading">
+          <h2 id="identiteit-titel">Twee verbindingen.<br>Twee identiteiten.</h2>
+          <span class="tag proven">Bewezen in PoC</span>
+        </div>
+        <p class="intro">De plaats van het token bepaalt of de aanroep delegated of app-only is. Een Managed Identity-optie maakt niet de hele keten gebruikersvrij.</p>
+        <figure aria-label="Authenticatiestroom van de huidige PoC">
+          <div class="flow">
+            <div class="flow-node"><h3>Power Platform</h3><p>Custom Connector met een lokale OAuth-Connection.</p><small>Uitgaand: gebruikerstoken + subscription key</small></div>
+            <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 16h24M19 8l8 8-8 8"/></svg></div>
+            <div class="flow-node focus"><h3>APIM</h3><p>Autoriseert de oorspronkelijke aanroeper en vervangt het bearer-token.</p><small>Uitgaand: app-only token van APIM MI</small></div>
+            <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 16h24M19 8l8 8-8 8"/></svg></div>
+            <div class="flow-node"><h3>Backend</h3><p>Controleert de exacte APIM-identiteit en de vereiste applicatierol.</p><small>Ziet APIM, niet de oorspronkelijke gebruiker</small></div>
+          </div>
+          <figcaption>De subscription key wordt niet naar de backend doorgestuurd. APIM is de autorisatielaag voor de oorspronkelijke consumer.</figcaption>
+        </figure>
+        <p class="note">Moet de backend zelf de gebruiker herkennen en autoriseren? Bekijk het <a href="#obo">aanvullende ontwerp met APIM MI en een afzonderlijk OBO-gebruikerstoken</a>.</p>
+        <div class="columns">
+          <div><h3>Wanneer delegated?</h3><ul><li>De API mag of moet namens een gebruiker worden aangeroepen.</li><li>Hergebruik via een Custom Connector is gewenst.</li><li>Een eerste aanmelding en eventueel later herstel zijn acceptabel.</li><li>INET staat een expliciet geautoriseerde delegated ingang toe.</li></ul></div>
+          <div><h3>Wanneer app-only?</h3><ul><li>Een proces moet zonder gebruikersaccount functioneren.</li><li>Rechten horen bij een applicatie, niet bij een persoon.</li><li>INET vereist ook bij binnenkomst in APIM een app-only JWT.</li><li>Continuiteit mag niet van een gebruikers-Connection afhangen.</li></ul></div>
+        </div>
+        <div class="callout"><p><strong>De belangrijke beperking:</strong> ingebouwde OAuth van generieke Custom Connectors ondersteunt geen native <code>client_credentials</code>. Connector-MI vervangt het OAuth-clientsecret via federation, maar blijft delegated. Een SP als flow-eigenaar of pipeline-identiteit verandert dat niet.</p></div>
+        <details>
+          <summary>App-only alternatieven en hun afwegingen</summary>
+          <div class="detail-body">
+            <p>Alle drie zijn ontwerpopties; geen van deze alternatieven is in deze PoC gerealiseerd.</p>
+            <div class="table-wrap" role="region" aria-label="Vergelijking app-only routes" tabindex="0">
+              <table>
+                <caption>Kies op de harde eis, niet op het label Managed Identity</caption>
+                <thead><tr><th scope="col">Route</th><th scope="col">Wat blijft?</th><th scope="col">Belangrijkste afweging</th></tr></thead>
+                <tbody>
+                  <tr><th scope="row">A. Key-only naar APIM</th><td>Custom Connector; geen extra service; APIM MI naar backend.</td><td>Geen JWT aan de APIM-ingang. Voldoet niet aan key + app-only JWT. Alleen met gewijzigde securityafspraak.</td></tr>
+                  <tr><th scope="row">B. HTTP met Service Principal</th><td>App-only JWT + key aan de INET-ingang; geen extra compute.</td><td>Vervangt de Custom Connector-aanroep. Valideer de specifieke HTTP-actie, credentials en application permissions in de doelomgeving.</td></tr>
+                  <tr><th scope="row">C. Beveiligde adapter</th><td>Custom Connector en bestaande app-only INET-ingang.</td><td>Extra infrastructuur. Ook de verbinding naar de adapter moet gebruikersvrij worden ontworpen; bied alleen vaste geautoriseerde operaties.</td></tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="note">Route B is niet zonder meer de connector &ldquo;HTTP with Microsoft Entra ID&rdquo;. Een <code>roles</code>-claim alleen bewijst ook geen app-only context: valideer de volledige tokencontext.</p>
+          </div>
+        </details>
+      </section>
+
+      <section id="obo" aria-labelledby="obo-titel">
+        <div class="section-heading">
+          <h2 id="obo-titel">APIM als toegelaten service.<br>De gebruiker blijft in beeld.</h2>
+          <span class="tag open">Ontwerp &middot; nog valideren</span>
+        </div>
+        <p class="intro">Twee controles naast elkaar: de web-API accepteert alleen de APIM-service-identiteit en controleert daarnaast namens welke gebruiker die service handelt.</p>
+        <figure aria-label="Ontwerp met een APIM Managed Identity-token en een afzonderlijk OBO-gebruikerstoken">
+          <div class="flow">
+            <div class="flow-node"><h3>Power Platform</h3><p>Stuurt een delegated token voor de frontend/API en de subscription key.</p><small>De gebruiker van de Connection blijft het uitgangspunt.</small></div>
+            <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 16h24M19 8l8 8-8 8"/></svg></div>
+            <div class="flow-node focus"><h3>APIM</h3><p>Valideert de aanroep. Verkrijgt een MI-token en wisselt via Entra OBO het gebruikerstoken in voor een backendtoken.</p><small>Uitgaand: twee tokens met verschillende functies.</small></div>
+            <div class="flow-arrow" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 16h24M19 8l8 8-8 8"/></svg></div>
+            <div class="flow-node"><h3>Web-API</h3><p>Valideert service en gebruiker afzonderlijk. Beide controles moeten slagen.</p><small>APIM mag aanroepen; de gebruiker bepaalt mede wat is toegestaan.</small></div>
+          </div>
+          <figcaption>OBO behoudt gebruikerscontext; het maakt de uitvoering niet gebruikersvrij. De subscription key blijft een aparte APIM-controle en wordt niet naar de backend doorgestuurd.</figcaption>
+        </figure>
+        <div class="table-wrap" role="region" aria-label="Twee afzonderlijke tokens voor de backend" tabindex="0">
+          <table>
+            <caption>Voorgesteld backendcontract: beide tokens verplicht</caption>
+            <thead><tr><th scope="col">Controle</th><th scope="col">Token en transport</th><th scope="col">Validatie door de web-API</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Mag deze service aanroepen?</th><td><code>Authorization: Bearer &lt;APIM MI-token&gt;</code></td><td>Handtekening, issuer, backend-audience, geldigheid, exacte APIM-identiteit en vereiste applicatierol.</td></tr>
+              <tr><th scope="row">Namens wie, met welke rechten?</th><td><code>X-User-Token: &lt;OBO-token&gt;</code></td><td>Handtekening, issuer, backend-audience, geldigheid, delegated scope, toegestane middle-tier-app en gebruikers-/resourcerechten.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note"><code>X-User-Token</code> is een voorbeeld van een eigen header, geen standaard OBO-header. De combinatie is een eigen backendcontract en is niet in deze PoC gerealiseerd. Een geldig token aan slechts een van beide kanten is onvoldoende.</p>
+        <div class="columns">
+          <div>
+            <h3>Waarom een nieuw gebruikerstoken?</h3>
+            <p>Het oorspronkelijke token is voor de frontend/API achter APIM uitgegeven. OBO verkrijgt een nieuw delegated token voor de backend; versoepel de audiencecontrole niet om het oorspronkelijke token toch te accepteren.</p>
+            <p>De backend kan <code>tid</code> + <code>oid</code> uit het gevalideerde gebruikerstoken gebruiken voor gebruikersidentificatie en bijvoorbeeld dossierautorisatie. Alleen een gebruikers-ID doorgeven is geen OBO.</p>
+          </div>
+          <div>
+            <h3>MI en OBO hebben aparte functies</h3>
+            <p>De APIM MI verzorgt de serviceauthenticatie naar de backend. De middle-tier-app heeft daarnaast een credential nodig voor de OBO-uitwisseling met Entra, bijvoorbeeld een secret of certificaat.</p>
+            <p>MI-federation als OBO-clientcredential is een afzonderlijke onderzoeksoptie, geen voorwaarde voor dit tweelaagse ontwerp. Ook de concrete policy-only uitvoering moet nog worden gevalideerd.</p>
+          </div>
+        </div>
+        <div class="callout"><p><strong>Identiteitscontrole is geen netwerkgrens.</strong> MI bepaalt welke service-identiteit toegang krijgt. Voor letterlijk &ldquo;alleen APIM kan verbinding maken&rdquo; zijn daarnaast passende netwerkrestricties of private bereikbaarheid nodig.</p></div>
+        <details>
+          <summary>Beveiligingsafspraken voor de twee tokens</summary>
+          <div class="detail-body">
+            <ul>
+              <li>APIM verwijdert of overschrijft altijd een door de consumer aangeleverde <code>X-User-Token</code> en stuurt uitsluitend het resultaat van de eigen OBO-uitwisseling door.</li>
+              <li>De backend valideert twee afzonderlijke identiteiten. Meng hun claims niet onbedoeld: de APIM-service principal en de gebruiker hebben ieder een eigen <code>oid</code>.</li>
+              <li>Een geldig MI-token zonder geldige gebruikerscontext, of een geldig OBO-token zonder de toegestane MI, wordt geweigerd.</li>
+              <li>Twee geldige tokens zijn niet automatisch cryptografisch aan elkaar gekoppeld. Leg de toegestane combinatie vast, begrens policybeheer en test verwisselde tokens en gebruikers.</li>
+              <li>Gebruik TLS, vaste backendbestemmingen en geen tokens in logs of traces. Begin zonder eigen OBO-cache en test eventuele caching later op scheiding tussen gebruikers en tokencontexten.</li>
+            </ul>
+          </div>
+        </details>
+        <details>
+          <summary>Afzonderlijke PoC: wat veranderen en bewijzen?</summary>
+          <div class="detail-body">
+            <ol class="sequence">
+              <li><div><strong>Maak een aparte route.</strong>Voeg bijvoorbeeld <code>/proof-obo</code> toe. Behoud de bestaande app-only <code>/proof</code>-route en haar autorisatie ongewijzigd.</div></li>
+              <li><div><strong>Richt OBO in.</strong>Voeg een delegated backendscope, frontend-permission/consent en een middle-tier-credential toe. Laat APIM het gebruikerstoken uitwisselen en beide tokens sturen.</div></li>
+              <li><div><strong>Valideer beide identiteiten.</strong>Behoud de MI-servicecontrole en voeg afzonderlijke OBO-validatie toe. De huidige backend verwerpt gebruikersclaims in het service-token; die controle hoeft niet te worden versoepeld.</div></li>
+              <li><div><strong>Test succes en afwijzingen.</strong>Twee gebruikers behouden hun eigen identiteit. Ontbrekende tokens, verkeerde audiences, verkeerde service/client, scopes en keys worden geweigerd.</div></li>
+              <li><div><strong>Test de gehele keten.</strong>Controleer Conditional Access/MFA-challenges in Power Platform, herstel en eventueel caching. Bewijs dat de bestaande route blijft werken.</div></li>
+            </ol>
+            <p><a href="https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow">Microsoft: het OBO-protocol</a>. Het <a href="obo-onderzoek.md">eerdere OBO/MI-onderzoek</a> bespreekt vooral MI als credential voor de tokenuitwisseling; dat is een andere vraag dan de twee controles in dit hoofdstuk.</p>
+          </div>
+        </details>
+      </section>
+
+      <section id="inet" aria-labelledby="inet-titel">
+        <div class="section-heading"><h2 id="inet-titel">1. API beschikbaar stellen</h2><span class="tag advice">INET &middot; architectuur en security</span></div>
+        <p class="intro">Meer dan een policywijziging: leg vast wie de oorspronkelijke consumer autoriseert en wat de backend nog moet weten.</p>
+        <div class="columns">
+          <div>
+            <h3>Wat moet worden ingericht?</h3>
+            <ul><li><strong>Entra:</strong> delegated scope, connectorclient, consent en passende gebruikerstoegang.</li><li><strong>APIM:</strong> key, tenant, audience, toegestane client, scope en vereiste gebruikersrechten controleren.</li><li><strong>Producttoegang:</strong> subscriptions, quota, goedkeuring, eigenaar en rotatie per consumer/omgeving.</li><li><strong>Backend:</strong> APIM-identiteit en applicatierollen autoriseren.</li></ul>
+          </div>
+          <div>
+            <h3>Wat blijft een expliciet besluit?</h3>
+            <ul><li>Zijn consumer- of gebruikersrechten op dossier- of operatieniveau nodig?</li><li>Moet APIM een key expliciet aan een toegestane JWT-consumer koppelen?</li><li>Is een aparte delegated route/API wenselijk naast de bestaande app-only ingang?</li><li>Welke auditgegevens zijn nodig, met passende toegang en bewaartermijn?</li></ul>
+          </div>
+        </div>
+        <div class="callout"><p><strong>De backend hoeft alleen ongewijzigd te blijven als vertrouwen in APIM alle vereiste autorisatie afdekt.</strong> Een apart Product is op zichzelf geen volledige beveiligingsscheiding. Een connectorinstallatie verleent ook niet automatisch Producttoegang.</p></div>
+        <details>
+          <summary>Risico's van een gedeelde APIM Managed Identity</summary>
+          <div class="detail-body">
+            <ul><li><strong>Confused deputy:</strong> een fout in de caller-policy kan brede backendrechten beschikbaar maken. Dwing validatie en policy-overerving af en test afwijzingen.</li><li><strong>Beheer als vertrouwensgrens:</strong> policybeheerders kunnen gekoppelde identities gebruiken of tokens doorsturen. Beperk editrechten en backendbestemmingen.</li><li><strong>Geen harde isolatie:</strong> meerdere user-assigned identities helpen rechten scheiden, maar isoleren niet tegen policybeheerders op dezelfde APIM-instantie.</li><li><strong>Consumercontext:</strong> headers met losse gebruikersclaims zijn een verklaring van APIM, geen delegated token. Dit verschilt van een <a href="#obo">afzonderlijk gevalideerd OBO-token</a>. Overschrijf inkomende waarden en beveilig het pad naar de backend.</li></ul>
+            <p>Gebruik minimale applicatierollen, correlatie zonder secrets, negatieve tests en waar passend netwerkrestricties als aanvullende bescherming.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Publieke omgeving of VNet?</summary>
+          <div class="detail-body"><p>SP- of MI-authenticatie vereist op zichzelf geen VNet. Publiek bereikbaar APIM kan vanuit reguliere Power Platform-omgevingen worden gebruikt, onder voorwaarden van licenties, rechten, DLP en tenantbeleid. Private-only APIM vraagt een afzonderlijke netwerkoplossing. Private connectiviteit en Dynamics UI-integratie zijn niet in deze PoC bewezen.</p></div>
+        </details>
+      </section>
+
+      <section id="connector" aria-labelledby="connector-titel">
+        <div class="section-heading"><h2 id="connector-titel">2. Connector realiseren</h2><span class="tag advice">PPE &middot; identiteit en lifecycle</span></div>
+        <p class="intro">Beheer het API-contract, de beveiligingsconfiguratie en de instellingen per omgeving afzonderlijk. Een APIM-export is geen complete ALM-strategie.</p>
+        <div class="columns">
+          <div><h3>Voorkeur voor de delegated route</h3><p>Gebruik federation in plaats van een OAuth-clientsecret. Dat vermijdt clientsecretrotatie, niet de gebruikersaanmelding.</p><ul><li>Single-tenant clientappregistratie.</li><li>Concrete tenant-GUID, niet <code>common</code>.</li><li>Werkelijke redirect, issuer en subject registreren per omgeving.</li><li>Pipeline-SP/WIF apart van runtime-authenticatie beheren.</li></ul></div>
+          <div><h3>Federation: automatiseer, maar bewijs het pad</h3><p>Registratie in Entra kan via Graph. Microsoft beschrijft redirect en identity als stabiel bij updates; een andere omgeving krijgt een nieuwe identity.</p><p>De PoC kende wel een conflict tussen managed imports, Active layers en doelomgevinggegevens. De herstelprocedure bewijst geen volledig layer-vrije deployment.</p></div>
+        </div>
+        <div class="callout"><p><strong>Acceptatiepunt:</strong> een schone eerste import en twee opeenvolgende updates, met correcte federation en werkende Connections, zonder handmatige reparaties of ongewenste layers. Verwijder Active layers nooit blind.</p></div>
+        <details>
+          <summary>Hoe behouden updates de authenticatie?</summary>
+          <div class="detail-body">
+            <ol class="sequence">
+              <li><div><strong>Leg de baseline vast.</strong>Identiteiten, OAuth/key-parameters, policies, targetfederation en effectieve definitie.</div></li>
+              <li><div><strong>Download de actuele properties.</strong>Werk de definitie bij met zowel het definitie- als propertiesbestand. Overschrijf federation niet met de initiatiele auth-overlay.</div></li>
+              <li><div><strong>Behoud het contract.</strong>Stabiele operation IDs en connection parameters; breaking changes vragen een afzonderlijke migratie of v2.</div></li>
+              <li><div><strong>Controleer het resultaat.</strong>Vergelijk configuratie en effectieve definitie en voer een echte aanroep uit met de oorspronkelijke Connection.</div></li>
+            </ol>
+            <p>Environment variables ondersteunen onder andere host en OAuth-velden. Ze worden bij opslaan toegepast, niet dynamisch per request. Ze zijn geen bewezen oplossing voor federation subject/redirect en worden niet ondersteund in connectoracties, triggers of policies.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Welke scripts kunnen we hergebruiken?</summary>
+          <div class="detail-body">
+            <ul>
+              <li><a href="../scripts/Update-ConnectorDefinition.ps1">Update-ConnectorDefinition</a>: properties behouden en security controleren.</li>
+              <li><a href="../scripts/Set-ConnectorFederation.ps1">Set-ConnectorFederation</a>: federated credential en redirect registreren.</li>
+              <li><a href="../scripts/Restore-TargetFederationMetadata.ps1">Restore-TargetFederationMetadata</a>: gecontroleerd herstel, geen generieke layer-oplossing.</li>
+              <li><a href="../scripts/Test-ManagedPackages.ps1">Test-ManagedPackages</a> en <a href="../scripts/Test-ManagedUpdate.ps1">Test-ManagedUpdate</a>: eigenaarschap en update-invarianten bewaken.</li>
+            </ul>
+            <p><strong>Bouwstenen, geen productiestraat.</strong> Nog nodig: parameters per omgeving, ondersteunde niet-interactieve authenticatie, idempotentie, veilige secretverwerking, approvals, herstel en bewezen uitvoering. De bestaande <a href="../azure-pipelines.yml">pipeline</a> is een niet-uitgevoerde template.</p>
+          </div>
+        </details>
+      </section>
+
+      <section id="distributie" aria-labelledby="distributie-titel">
+        <div class="section-heading"><h2 id="distributie-titel">3. Centraal distribueren</h2><span class="tag advice">PPE &middot; managed solutions</span></div>
+        <p class="intro">Begin met directe deployments voor verplichte OTAP-promoties. Voeg Catalog toe wanneer vindbaarheid en self-service hergebruik waarde toevoegen.</p>
+        <div class="table-wrap" role="region" aria-label="Distributiekeuze" tabindex="0">
+          <table>
+            <caption>Directe deployment en Catalog zijn aanvullend, niet uitwisselbaar</caption>
+            <thead><tr><th scope="col">Afweging</th><th scope="col">Directe managed deployment</th><th scope="col">Power Platform Catalog</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Doel</th><td>Geplande uitrol naar benoemde omgevingen.</td><td>Vindplaats voor goedgekeurde herbruikbare componenten.</td></tr>
+              <tr><th scope="row">Regie</th><td>Pipeline bepaalt versie, volgorde en approvals.</td><td>Publishers en goedkeuring; installatie/update expliciet organiseren.</td></tr>
+              <tr><th scope="row">Updates</th><td>Centraal per omgeving plannen en controleren.</td><td>Een nieuwe publicatie is geen automatische push naar alle consumers.</td></tr>
+              <tr><th scope="row">Voorwaarden</th><td>Doelomgevingen, rechten en pipeline-inrichting.</td><td>Extra Dataverse/Catalog-inrichting; publiceren vereist een Managed Environment.</td></tr>
+              <tr><th scope="row">Lost niet op</th><td colspan="2">Lokale federation, credentials, Connections en deelrechten blijven afzonderlijke werkzaamheden.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>De aanbevolen promotievolgorde</h3>
+        <ol class="sequence">
+          <li><div><strong>Contract en authoring valideren.</strong>OpenAPI uit APIM, beheerde authconfiguratie en compatibiliteitscontrole.</div></li>
+          <li><div><strong>Een versioned managed artifact maken.</strong>Solutionversie verhogen en centraal eigenaarschap controleren.</div></li>
+          <li><div><strong>Eerst de connector importeren.</strong>Daarna effectieve definitie, federation, layers en lokale gebruiksrechten controleren.</div></li>
+          <li><div><strong>Consumers importeren en lokaal binden.</strong>Deployment settings koppelen References aan bestaande Connections.</div></li>
+          <li><div><strong>De echte uitvoering toetsen.</strong>Succes en relevante afwijzingen controleren, niet alleen het importresultaat.</div></li>
+        </ol>
+        <details>
+          <summary>Lokale wijzigingen, afhankelijkheden en Catalog-automatisering</summary>
+          <div class="detail-body"><p>Houd connector- en consumer-solutions gescheiden. Laat consumers de centrale connector niet opnieuw als eigen component verpakken. Dependencyregistratie en managed properties kennen connectorbeperkingen.</p><p>Beperk editrechten en detecteer onverwachte Active layers. Managed betekent niet dat iedere lokale wijziging onmogelijk is. Onderscheid ongewenste edits van noodzakelijke omgevingsconfiguratie.</p><p>Catalog ondersteunt PAC submit/install/status. Specifieke Build Tools-taken zijn als preview gedocumenteerd; valideer het gekozen publicatiepad. Consumerinstallatie heeft niet dezelfde Managed Environment-publicatievoorwaarde. Catalog is hier niet live getest.</p></div>
+        </details>
+      </section>
+
+      <section id="gebruik" aria-labelledby="gebruik-titel">
+        <div class="section-heading"><h2 id="gebruik-titel">4. Teams onboarden</h2><span class="tag open">Deels automatiseerbaar</span></div>
+        <p class="intro">Een connector delen, een Connection gebruiken en een Connection Reference binden zijn drie verschillende handelingen.</p>
+        <div class="columns">
+          <div><h3>Centraal te organiseren</h3><ul><li>Productaanvraag en goedkeuring, subscription per consumer/omgeving.</li><li>Veilige opslag, rotatie en intrekking van keys.</li><li>Connectorimport, lokale rechten en passend DLP-beleid.</li><li>Registratie van federation en redirect.</li><li>Binding aan bestaande Connections en runtime-tests.</li></ul></div>
+          <div><h3>Wat niet vanzelf verdwijnt</h3><ul><li>De eerste delegated gebruikersaanmelding.</li><li>Herstel bij ingetrokken rechten of Conditional Access-wijzigingen.</li><li>Een ondersteund pad voor key-invoer en rotatie zonder uitlevering aan teams.</li><li>De noodzaak om Connection-gebruik en flow-editrechten te begrenzen.</li></ul></div>
+        </div>
+        <div class="callout"><p><strong>Key Vault-toegang geven is nog steeds een key verstrekken.</strong> &ldquo;Eigen delegated identiteit + geen secrets voor teams + volledig automatische eerste Connection&rdquo; is met deze PoC niet aangetoond. Key Vault alleen lost dit niet op.</p></div>
+        <p>De API-aanroep gebruikt de identiteit van de gebruikte Connection, niet automatisch die van degene die de flow start. Delen met een service principal voor flow-activatie verandert die runtime-identiteit niet in app-only.</p>
+        <details>
+          <summary>OTAP: wat beheren we per omgeving?</summary>
+          <div class="detail-body">
+            <div class="table-wrap" role="region" aria-label="OTAP-inrichting" tabindex="0">
+              <table>
+                <caption>Lokale credentials, centraal beheer</caption>
+                <thead><tr><th scope="col">Onderdeel</th><th scope="col">Beheerafspraak</th></tr></thead>
+                <tbody><tr><th scope="row">Host, audience en client</th><td>Gecontroleerde omgevingsconfiguratie; ondersteunde environment variables waar passend.</td></tr><tr><th scope="row">Federation en redirect</th><td>Werkelijke doelomgevinggegevens registreren en verifiëren; niet blind uit Build kopiëren.</td></tr><tr><th scope="row">Subscription key</th><td>Beveiligde lokale Connection, centrale lifecycle en eigenaar. Geen secrets in Git, logs of gewone settings.</td></tr><tr><th scope="row">Connection</th><td>Lokaal aanmaken, monitoren en herstellen. Geen werkende login tussen omgevingen transporteren.</td></tr><tr><th scope="row">Connection Reference</th><td>Stabiele logische naam; lokale binding. Bevat geen credentials.</td></tr><tr><th scope="row">Pipeline en backend</th><td>Minimale rechten en passende scheiding tussen productie en niet-productie.</td></tr></tbody>
+              </table>
+            </div>
+            <p>Key-rotatie vraagt aanpassing van de opgeslagen key, maar niet noodzakelijk een nieuwe OAuth-login. Test de rotatieprocedure voordat deze als volledig geautomatiseerd wordt aangeboden.</p>
+          </div>
+        </details>
+        <details>
+          <summary>Let op: flows zijn geen bewijs voor Canvas of Dynamics</summary>
+          <div class="detail-body"><p>Microsoft documenteert dat Canvas-apps Connection References voor custom connectors niet herkennen. De workaround na import kan bewerking van de app vereisen en daarmee een unmanaged layer veroorzaken. Valideer Canvas- en Dynamics-scenario's afzonderlijk; de PoC heeft alleen de beschreven flowroute bewezen.</p></div>
+        </details>
+      </section>
+
+      <section id="bewijs" aria-labelledby="bewijs-titel">
+        <h2 id="bewijs-titel">Wat is daadwerkelijk bewezen?</h2>
+        <p class="intro">Historisch bewijs uit de vastgelegde runs van 5 november 2026. Voor deze presentatie zijn geen resources opnieuw getest of gewijzigd.</p>
+        <div class="evidence">
+          <div><h3><span class="tag proven">Live bewezen</span></h3><ul><li>Subscription key + delegated JWT naar APIM.</li><li>APIM app-only identiteit en applicatierol naar de backend.</li><li>Geslaagde flow voor en na een compatibele definitie-update.</li><li>Dezelfde Connection en Reference; geen herauthenticatie tussen die runs.</li><li>Zes negatieve live checks, waaronder ontbrekende/ongeldige key, bearerproblemen, verkeerde audience en anonieme directe backendtoegang.</li></ul></div>
+          <div><h3><span class="tag open">Niet live aangetoond</span></h3><ul><li>Een uitgevoerde Azure DevOps/WIF-promotiestraat.</li><li>Volledig automatische eerste OAuth-Connection en key-rotatie.</li><li>Herhaalde updates zonder handmatige layercorrecties.</li><li>App-only alternatieven, SP-owned flowgedrag en Catalog.</li><li>Canvas/Dynamics UI, private netwerkroute en volledige OTAP-uitrol.</li></ul></div>
+        </div>
+        <div class="callout good"><p><strong>Het updatebewijs is waardevol, maar begrensd.</strong> De effectieve definitie ging van 1.0.0 naar 1.0.1. Dit was een compatibele beschrijvingswijziging, na gecontroleerd herstel van packaging, policies en federation; geen bewijs dat iedere managed import veilig verloopt.</p></div>
+        <details>
+          <summary>Wat leerden de fouten en lokale tests?</summary>
+          <div class="detail-body"><ul><li>Een definitie-update zonder propertiesbestand verwijderde de subscription-headerpolicy.</li><li>Een Security-UI-save verwijderde de aangepaste key-parameter.</li><li>Een consumer-package bevatte onbedoeld de centrale connector.</li><li>Een Active layer maskeerde de nieuwe definitie; verwijderen legde Build-federation bloot.</li></ul><p>Lokale tests en guards controleerden onder meer verkeerde rollen/identiteiten, gebruikerscontext en configuratieverlies. Niet al deze gevallen zijn met echte live tokens getest. De echte wrong-scope-tokencheck is niet uitgevoerd.</p><p><a href="implementation-summary.md">Lees de volledige bewijsregistratie en herstelgeschiedenis</a>.</p></div>
+        </details>
+      </section>
+
+      <section id="vervolgvragen" class="faq" aria-labelledby="vragen-titel">
+        <h2 id="vragen-titel">De zeven vervolgvragen, kort beantwoord.</h2>
+        <p class="intro">De aangescherpte antwoorden, inclusief de correcties uit de second opinion.</p>
+        <details><summary>1. Moet INET vooral de policies aanpassen?</summary><div class="detail-body"><p>Policies zijn essentieel, maar ook Entra-scopes, consent, gebruikerstoegang, subscriptionbeheer en audit moeten aansluiten. De backend kan alleen ongewijzigd blijven als APIM alle vereiste consumerautorisatie overneemt. <a href="#inet">Naar API beschikbaar stellen</a>.</p></div></details>
+        <details><summary>2. Is één APIM Managed Identity voor meerdere consumers veilig?</summary><div class="detail-body"><p>Dat kan, als APIM bewust de vertrouwde autorisatielaag is. Beperk rechten en policybeheer, controleer bestemmingen en test afwijzingen. Meerdere identities op dezelfde instantie beschermen niet tegen een beheerder die die identities via policies kan gebruiken. <a href="#inet">Naar de beveiligingsgrens</a>.</p></div></details>
+        <details><summary>3. Kunnen redirect en federation automatisch, zonder unmanaged layers?</summary><div class="detail-body"><p>Entra-registratie is automatiseerbaar. Het volledige import/updatepad zonder ongewenste layers is niet bewezen. De PoC toont geen algemene noodzaak voor een Active layer, en environment variables zijn geen bewezen totaaloplossing. Test een schone import plus twee updates; bevestig zo nodig het ondersteunde pad met Microsoft. <a href="#connector">Naar connectorbeheer</a>.</p></div></details>
+        <details><summary>4. Hoe behouden we authenticatie, Connections en References?</summary><div class="detail-body"><p>Behoud properties, contract en componentidentiteiten. Importeer connector en consumers apart. Controleer effectieve configuratie en echte uitvoering. De PoC bewijst één compatibele update na correcties, geen onbeperkte garantie; Canvas kent een expliciete beperking. <a href="#connector">Naar de updateprocedure</a>.</p></div></details>
+        <details><summary>5. Zijn de scripts de basis voor volledige automatisering?</summary><div class="detail-body"><p>Ja, als bouwstenen. Parameterisering, pipelineauthenticatie, idempotentie, secretverwerking, provisioning en herstel moeten nog worden uitgewerkt en uitgevoerd. De huidige pipeline is een template, geen end-to-end bewijs. <a href="#connector">Naar de scripts</a>.</p></div></details>
+        <details><summary>6. Directe managed deployments boven Catalog?</summary><div class="detail-body"><p>Ja, voor verplichte OTAP-promotie. De hoofdreden is regie over versie, volgorde en validatie. Catalog kan daar later discovery en self-service aan toevoegen, maar verzorgt geen automatische universele update of lokale authenticatie. <a href="#distributie">Naar de distributiekeuze</a>.</p></div></details>
+        <details><summary>7. Onboarding automatiseren zonder credentials aan teams te geven?</summary><div class="detail-body"><p>Automatiseer import, rechten, federation en binding. Voor de eerste delegated Connection blijft gebruikersaanmelding nodig. Het veilig injecteren en roteren van de key zonder deze aan teams te geven vraagt een nog te bewijzen provisioningpad. Voor volledig gebruikersvrije runtime is een app-only alternatief nodig. <a href="#gebruik">Naar onboarding</a>.</p></div></details>
+      </section>
+
+      <section id="besluiten" aria-labelledby="besluiten-titel">
+        <div class="section-heading"><h2 id="besluiten-titel">Eerst besluiten.<br>Dan industrialiseren.</h2><span class="tag advice">Voorgestelde vervolgstappen</span></div>
+        <p class="intro">Maak productiegeschiktheid meetbaar. Niet alleen een groene pipeline, maar de juiste identiteit, behouden configuratie en werkende consumers.</p>
+        <ol class="sequence">
+          <li><div><strong>INET + security: kies de identiteitsgrens.</strong>Is delegated aan de ingang toegestaan? Welke autorisatie hoort bij APIM en welke bij de backend? Leg zo nodig de koppeling tussen JWT en subscription vast.</div></li>
+          <li><div><strong>PPE: bewijs herhaalbare ALM.</strong>Schone import en twee updates; effectieve contractwijziging, correcte federation, stabiele Connections en geen ongewenste layers.</div></li>
+          <li><div><strong>PPE + teams: bewijs onboarding en rotatie.</strong>Test wie aanmeldt, wie een Connection mag gebruiken en hoe de key zonder uitlevering aan teams wordt geplaatst en geroteerd.</div></li>
+          <li><div><strong>Gezamenlijk: neem de productiegates af.</strong>Negatieve autorisatietests, OTAP-scheiding, DLP, licenties, monitoring, herstel, beschikbaarheid en beheerrechten.</div></li>
+        </ol>
+        <div class="recommendation" style="margin-top: 2rem">
+          <h3>De voorkeursrichting</h3>
+          <p>Delegated met federation waar gebruikerscontext past. Directe managed deployments voor centrale uitrol. Een afzonderlijke app-only route waar een gebruiker geen afhankelijkheid mag zijn.</p>
+          <p><strong>Pas &ldquo;volledig geautomatiseerd&rdquo; toezeggen als federation-updates en secretvrije onboarding end-to-end zijn bewezen.</strong></p>
+        </div>
+      </section>
+
+      <section id="bronnen" aria-labelledby="bronnen-titel">
+        <h2 id="bronnen-titel">Bronnen &amp; verdieping</h2>
+        <p class="intro">Deze presentatie vat repo-evidence en de besproken architectuuradviezen samen. Bewijslabels zijn geen algemene productgarantie.</p>
+        <div class="sources">
+          <div><h3>In deze repository</h3><ul><li><a href="authenticatie-keuze.md">Delegated of app-only: uitgebreide keuzegids</a></li><li><a href="implementation-summary.md">Implementatie en historisch live bewijs</a></li><li><a href="architecture.md">Architectuur en identiteitsgrenzen</a></li><li><a href="deployment.md">Guarded deployment- en herstelprocedure</a></li><li><a href="sources.md">Bronnen en bewijsstatus</a></li><li><a href="../azure-pipelines.yml">Azure DevOps-promotietemplate</a></li></ul></div>
+          <div><h3>Microsoft-documentatie</h3><ul><li><a href="https://learn.microsoft.com/connectors/custom-connectors/connection-parameters">Authenticatiemethoden en client credentials</a></li><li><a href="https://learn.microsoft.com/connectors/custom-connectors/azure-active-directory-authentication#managed-identity-authentication">Connectorfederation en Managed Identity</a></li><li><a href="https://learn.microsoft.com/azure/api-management/authentication-managed-identity-policy">APIM Managed Identity en policybeheer</a></li><li><a href="https://learn.microsoft.com/connectors/custom-connectors/customconnectorssolutions">Solution-aware custom connectors</a></li><li><a href="https://learn.microsoft.com/power-apps/maker/data-platform/create-connection-reference">Connection References, delen en Canvas-beperkingen</a></li><li><a href="https://learn.microsoft.com/connectors/custom-connectors/environment-variables">Environment variables</a></li><li><a href="https://learn.microsoft.com/power-platform/alm/conn-ref-env-variables-build-tools">Deployment settings en lokale bindings</a></li><li><a href="https://learn.microsoft.com/power-apps/maker/data-platform/catalog-overview">Power Platform Catalog</a> en <a href="https://learn.microsoft.com/power-platform/admin/administer-catalog">inrichtingsvoorwaarden</a></li></ul></div>
+        </div>
+        <p class="note">De webpagina werkt zonder libraries, externe lettertypen of netwerkverbinding. Externe bronnen vereisen internet; repo-links vereisen de bijbehorende bestanden. Gebruik Afdrukken / PDF om ook alle uitklapbare details te exporteren.</p>
+      </section>
+      <footer><p>INET &amp; PPE &middot; Architectuurbriefing &middot; 11 november 2026</p><a href="#overzicht">Terug naar het overzicht</a></footer>
+    </main>
+  </div>
+  <script>
+    (() => {
+      const disclosures = [...document.querySelectorAll('details')];
+      const toggle = document.getElementById('details-toggle');
+      const print = document.getElementById('print');
+      const links = [...document.querySelectorAll('.chapters a')];
+      const sections = links.map(link => document.querySelector(link.hash));
+      const rail = document.querySelector('.rail');
+      const updateToggle = () => {
+        toggle.textContent = disclosures.every(item => item.open) ? 'Alle details sluiten' : 'Alle details openen';
+      };
+
+      toggle.hidden = false;
+      print.hidden = false;
+      toggle.addEventListener('click', () => {
+        const open = !disclosures.every(item => item.open);
+        disclosures.forEach(item => { item.open = open; });
+        updateToggle();
+      });
+      disclosures.forEach(item => item.addEventListener('toggle', updateToggle));
+      print.addEventListener('click', () => window.print());
+
+      let printState = null;
+      window.addEventListener('beforeprint', () => {
+        if (printState !== null) return;
+        printState = disclosures.map(item => item.open);
+        disclosures.forEach(item => { item.open = true; });
+      });
+      window.addEventListener('afterprint', () => {
+        if (printState === null) return;
+        disclosures.forEach((item, index) => { item.open = printState[index]; });
+        printState = null;
+        updateToggle();
+      });
+
+      let pending = false;
+      const updateChapter = () => {
+        const offset = window.matchMedia('(max-width: 760px)').matches ? rail.offsetHeight + 48 : 64;
+        let current = 0;
+        sections.forEach((section, index) => {
+          if (section.getBoundingClientRect().top <= offset) current = index;
+        });
+        links.forEach((link, index) => {
+          if (index === current) link.setAttribute('aria-current', 'location');
+          else link.removeAttribute('aria-current');
+        });
+        pending = false;
+      };
+      const scheduleUpdate = () => {
+        if (pending) return;
+        pending = true;
+        window.requestAnimationFrame(updateChapter);
+      };
+      window.addEventListener('scroll', scheduleUpdate, { passive: true });
+      window.addEventListener('resize', scheduleUpdate);
+      updateChapter();
+    })();
+  </script>
+</body>
+</html>

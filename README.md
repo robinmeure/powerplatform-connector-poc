@@ -12,6 +12,8 @@ Read the [detailed implementation summary](docs/implementation-summary.md) for w
 
 For a Dutch decision guide covering when to use delegated authentication or app-only alternatives, see [Delegated of app-only](docs/authenticatie-keuze.md).
 
+For a browser presentation of the findings, including the follow-up questions and second-opinion corrections, open [the Dutch architecture briefing](docs/presentatie.html). It is a standalone, offline-capable HTML page with chapter navigation, expandable details and print/PDF support; no build or server is required. Repository source links need the accompanying files, and Microsoft documentation links require internet.
+
 **Naming note:** Contoso names throughout this repository are illustrative replacements for the original demo names, including resource URLs and runtime identifiers in historical evidence. This source-only rename does not rename deployed resources or migrate existing solutions, Connections, federation metadata, or ignored local artifacts. Before using these scripts with an existing deployment, reconcile its actual names, ownership tags, identifiers and local configuration; the renamed URLs are not verified live endpoints.
 
 ## Retained demo inventory

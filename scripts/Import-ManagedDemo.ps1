@@ -12,7 +12,7 @@ param(
 )
 . "$PSScriptRoot\Dataverse.ps1"
 & "$PSScriptRoot\Test-ManagedPackages.ps1" -SolutionDirectory $SolutionDirectory
-$session = New-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
+$session = Get-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
     -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'Contoso Connector PoC' `
     -ExpectedLocation $ExpectedLocation
 $name = "ContosoPoC$Stage"

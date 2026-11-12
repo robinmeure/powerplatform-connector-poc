@@ -8,7 +8,7 @@ param(
     [string]$ConnectorDirectory = (Join-Path $PSScriptRoot '..\out\connector')
 )
 . "$PSScriptRoot\Dataverse.ps1"
-$session = New-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
+$session = Get-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
     -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'Contoso Connector PoC Build' `
     -ExpectedLocation $ExpectedLocation
 $publisher = Invoke-Dataverse $session "publishers?`$filter=uniquename eq 'contosopocpublisher'"

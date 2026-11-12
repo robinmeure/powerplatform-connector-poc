@@ -1,17 +1,28 @@
+#requires -Version 7.1
+
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 function Invoke-Az {
     param([Parameter(Mandatory)][string[]]$Arguments)
     $output = & az @Arguments
-    if ($LASTEXITCODE -ne 0) { throw "Azure CLI command failed: $($Arguments[0]) $($Arguments[1])" }
+    $exitCode = $LASTEXITCODE
+    if ($exitCode -ne 0) {
+        $operation = @($Arguments | Where-Object { $_ -and $_ -notlike '-*' } | Select-Object -First 2) -join ' '
+        throw "Azure CLI command 'az $operation' failed with exit code $exitCode."
+    }
     return $output
 }
 
 function Invoke-AzJson {
-    param([Parameter(Mandatory)][string[]]$Arguments)
+    param([Parameter(Mandatory)][string[]]$Arguments, [switch]$AllowEmpty)
     $output = Invoke-Az -Arguments $Arguments
-    if ($output) { return ($output -join "`n" | ConvertFrom-Json -Depth 100) }
+    if (-not $output) {
+        if ($AllowEmpty) { return }
+        $operation = @($Arguments | Where-Object { $_ -and $_ -notlike '-*' } | Select-Object -First 2) -join ' '
+        throw "Azure CLI command 'az $operation' succeeded without the expected JSON output."
+    }
+    return ($output -join "`n" | ConvertFrom-Json -Depth 100)
 }
 
 function Assert-Tenant {
@@ -32,6 +43,9 @@ function Invoke-Graph {
             $Body | ConvertTo-Json -Depth 100 | Set-Content -Path $file -Encoding utf8
             $arguments += @('--body', "@$file", '--headers', 'Content-Type=application/json')
         }
+        if ($Method -ieq 'PATCH') {
+            return Invoke-AzJson -Arguments $arguments -AllowEmpty
+        }
         return Invoke-AzJson -Arguments $arguments
     }
     finally {
@@ -42,5 +56,9 @@ function Invoke-Graph {
 function Invoke-Pac {
     param([Parameter(Mandatory)][string[]]$Arguments)
     & pac @Arguments
-    if ($LASTEXITCODE -ne 0) { throw "PAC command failed: $($Arguments[0]) $($Arguments[1])" }
+    $exitCode = $LASTEXITCODE
+    if ($exitCode -ne 0) {
+        $operation = @($Arguments | Where-Object { $_ -and $_ -notlike '-*' } | Select-Object -First 2) -join ' '
+        throw "PAC command 'pac $operation' failed with exit code $exitCode."
+    }
 }

@@ -9,7 +9,7 @@ param(
     [Parameter(Mandatory)][string]$TargetSecurityPath
 )
 . "$PSScriptRoot\Dataverse.ps1"
-$session = New-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
+$session = Get-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
     -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'Contoso Connector PoC' `
     -ExpectedLocation $ExpectedLocation
 $baseline = Get-Content -LiteralPath $BaselineSnapshotPath -Raw | ConvertFrom-Json

@@ -1,6 +1,16 @@
 . "$PSScriptRoot\Common.ps1"
 
-function New-DemoDataverseSession {
+function Assert-DataverseOrganizationUrl {
+    param([Parameter(Mandatory)][Uri]$EnvironmentUrl)
+    if (-not $EnvironmentUrl.IsAbsoluteUri -or $EnvironmentUrl.Scheme -ne 'https' -or
+        $EnvironmentUrl.Host -notmatch '^[a-z0-9-]+\.crm\d*\.dynamics\.com$' -or
+        -not $EnvironmentUrl.IsDefaultPort -or $EnvironmentUrl.UserInfo -or
+        $EnvironmentUrl.AbsolutePath -ne '/' -or $EnvironmentUrl.Query -or $EnvironmentUrl.Fragment) {
+        throw 'Expected an HTTPS Dataverse organization root URL without credentials, a custom port, path, query or fragment.'
+    }
+}
+
+function Get-DemoDataverseSession {
     param(
         [Parameter(Mandatory)][Guid]$TenantId,
         [Parameter(Mandatory)][Guid]$SubscriptionId,
@@ -9,10 +19,8 @@ function New-DemoDataverseSession {
         [Parameter(Mandatory)][ValidateSet('Contoso Connector PoC Build', 'Contoso Connector PoC')][string]$ExpectedName,
         [ValidateSet('europe', 'switzerland')][string]$ExpectedLocation = 'europe'
     )
+    Assert-DataverseOrganizationUrl -EnvironmentUrl $EnvironmentUrl
     Assert-Tenant -TenantId $TenantId -SubscriptionId $SubscriptionId
-    if ($EnvironmentUrl.Scheme -ne 'https' -or -not $EnvironmentUrl.Host.EndsWith('.dynamics.com') -or $EnvironmentUrl.UserInfo) {
-        throw 'Expected an HTTPS Dataverse organization URL.'
-    }
     $powerPlatformToken = Invoke-AzJson @('account', 'get-access-token', '--subscription', "$SubscriptionId",
         '--resource', 'https://service.powerapps.com/', '-o', 'json')
     $environment = Invoke-RestMethod `
@@ -27,7 +35,13 @@ function New-DemoDataverseSession {
         throw 'The demo environment and Dataverse instance must both be ready.'
     }
     $actualUrl = $environment.properties.linkedEnvironmentMetadata.instanceUrl
-    if ([string]::IsNullOrEmpty($actualUrl) -or ([Uri]$actualUrl).Host -ne $EnvironmentUrl.Host) {
+    $actualUri = $null
+    if ([string]::IsNullOrWhiteSpace($actualUrl) -or
+        -not [Uri]::TryCreate($actualUrl, [UriKind]::Absolute, [ref]$actualUri)) {
+        throw 'Environment metadata does not contain a valid organization URL.'
+    }
+    Assert-DataverseOrganizationUrl -EnvironmentUrl $actualUri
+    if ($actualUri.Host -ne $EnvironmentUrl.Host) {
         throw 'Organization URL does not match the approved environment.'
     }
     $access = Invoke-AzJson @('account', 'get-access-token', '--subscription', "$SubscriptionId",

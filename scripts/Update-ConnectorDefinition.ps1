@@ -11,7 +11,7 @@ param(
 )
 . "$PSScriptRoot\Dataverse.ps1"
 . "$PSScriptRoot\ConnectorSecurity.ps1"
-$session = New-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
+$session = Get-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
     -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'Contoso Connector PoC Build' `
     -ExpectedLocation $ExpectedLocation
 $before = Invoke-Dataverse $session "connectors($ConnectorId)"

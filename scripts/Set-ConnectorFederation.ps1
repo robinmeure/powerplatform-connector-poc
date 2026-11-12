@@ -3,7 +3,7 @@ param(
     [Parameter(Mandatory)][Uri]$Issuer,
     [Parameter(Mandatory)][string]$Subject,
     [Parameter(Mandatory)][Uri]$RedirectUri,
-    [Parameter(Mandatory)][ValidatePattern('^[A-Za-z0-9-]{3,80}$')][string]$CredentialName,
+    [Parameter(Mandatory)][ValidatePattern('^[A-Za-z0-9-]{3,80}$')][Alias('CredentialName')][string]$FederatedIdentityName,
     [string]$IdentityPath = (Join-Path $PSScriptRoot '..\out\identity.local.json')
 )
 . "$PSScriptRoot\Common.ps1"
@@ -22,7 +22,7 @@ if ($app.tags -notcontains 'ContosoConnectorPoC' -or $app.appId -ne $identity.co
     throw 'Connector client registration is not the demo-owned application.'
 }
 $credentials = Invoke-Graph -Path "applications/$($app.id)/federatedIdentityCredentials"
-$existing = @($credentials.value | Where-Object { $_.name -eq $CredentialName })
+$existing = @($credentials.value | Where-Object { $_.name -eq $FederatedIdentityName })
 if ($existing.Count) {
     if ($existing.Count -ne 1 -or $existing[0].issuer -ne $Issuer.AbsoluteUri -or
         $existing[0].subject -ne $Subject -or $existing[0].audiences -notcontains 'api://AzureADTokenExchange') {
@@ -31,7 +31,7 @@ if ($existing.Count) {
 }
 else {
     Invoke-Graph -Path "applications/$($app.id)/federatedIdentityCredentials" -Method POST -Body @{
-        name = $CredentialName; issuer = $Issuer.AbsoluteUri; subject = $Subject
+        name = $FederatedIdentityName; issuer = $Issuer.AbsoluteUri; subject = $Subject
         audiences = @('api://AzureADTokenExchange')
     } | Out-Null
 }

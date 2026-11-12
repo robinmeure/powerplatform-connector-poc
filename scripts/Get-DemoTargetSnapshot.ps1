@@ -8,7 +8,7 @@ param(
     [ValidateSet('europe', 'switzerland')][string]$ExpectedLocation = 'europe'
 )
 . "$PSScriptRoot\Dataverse.ps1"
-$session = New-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
+$session = Get-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
     -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'Contoso Connector PoC' `
     -ExpectedLocation $ExpectedLocation
 $connectors = Invoke-Dataverse $session "connectors?`$filter=displayname eq 'Contoso Connector Proof'"

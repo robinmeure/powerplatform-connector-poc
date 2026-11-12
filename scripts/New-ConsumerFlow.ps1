@@ -8,7 +8,7 @@ param(
     [Parameter(Mandatory)][ValidatePattern('^shared_[A-Za-z0-9_-]+$')][string]$ApiName
 )
 . "$PSScriptRoot\Dataverse.ps1"
-$session = New-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
+$session = Get-DemoDataverseSession -TenantId $TenantId -SubscriptionId $SubscriptionId `
     -EnvironmentId $EnvironmentId -EnvironmentUrl $EnvironmentUrl -ExpectedName 'Contoso Connector PoC Build' `
     -ExpectedLocation $ExpectedLocation
 $connectors = Invoke-Dataverse $session "connectors?`$filter=connectorinternalid eq '$ApiName'"
